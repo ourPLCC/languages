@@ -8,25 +8,30 @@ Program
 
 Define
 %%%
-    // notice that calling toString triggers a modification
+    // notice that calling $run() triggers a modification
     // of the initial environment
-    public String toString() {
+    public void $run() {
         String id = var.toString();
         Env env = Program.env;
         Env xenv = Program.xenv;
         Cont cont = new EvalCont(exp, env, xenv, new Cont());
         Val val = cont.trampoline();
-        env.addFirst(new Binding(id, new ValRef(val)));
-        return id; // gotta return *something*
+        Ref ref = new ValRef(val);
+        Binding b = env.lookup(id);
+        if (b != null)
+            b.ref = ref;
+        else
+            env.add(new Binding(id, ref));
+        System.out.println(id);
     }
 %%%
 
 Eval
 %%%
-    public String toString() {
+    public void $run() {
         Cont cont = new EvalCont(exp, Program.env, Program.xenv, new Cont());
         Val val = cont.trampoline();
-        return val.toString();
+        System.out.println(val);
     }
 %%%
 
@@ -130,8 +135,7 @@ LetrecExp
 %%%
 
     public Cont eval(Env env, Env xenv, Cont cont) {
-        Env nenv = letrecDecls.addBindings(env, xenv);
-        return new EvalCont(exp, nenv, xenv, cont);
+        return letDecls.makeLetrecBuildCont(exp, env, xenv, cont);
     }
 
     public String toString() {
@@ -211,11 +215,23 @@ SeqExp
 
 %%%
 
+Formals:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in proc formals");
+%%%
+
 Proc
 %%%
     public Val makeClosure(Env env) {
         return new ProcVal(formals, exp, env);
     }
+%%%
+
+LetDecls:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in let/letrec LHS identifiers");
 %%%
 
 LetDecls
@@ -233,26 +249,21 @@ LetDecls
         return buildCont.next();
     }
 
+    public Cont makeLetrecBuildCont(Exp exp, Env env, Env xenv, Cont cont) {
+        LetrecBuildCont buildCont =
+            new LetrecBuildCont(varList,
+                          expList,
+                          env,
+                          xenv,
+                          exp,
+                          env,
+                          xenv,
+                          cont);
+        return buildCont.next();
+    }
+
     public String toString() {
         return " ...LetDecls... ";
-    }
-%%%
-
-LetrecDecls
-%%%
-    public Env addBindings(Env env, Env xenv) {
-        Env nenv = env.extendEnvRef(null); // no bindings yet
-        List<Val> valList = new ArrayList<Val>();
-        for (Proc p : procList)
-            valList.add(p.makeClosure(nenv));
-        Bindings bindings =
-            new Bindings(varList, Ref.valsToRefs(valList));
-        nenv.replaceBindings(bindings);
-        return nenv;
-    }
-
-    public String toString() {
-        return " ...LetrecDecls... ";
     }
 %%%
 
@@ -266,8 +277,8 @@ Handler
 HandlerDecls
 %%%
     public Env addBindings(Env env, Env xenv, Cont cont) {
-        List<String> idList = new ArrayList<String>();
-        List<Val> valList = new ArrayList<Val>();
+        List<String> idList = new ArrayList<String>(handlerList.size());
+        List<Val> valList = new ArrayList<Val>(handlerList.size());
         for (Handler h : handlerList)
             valList.add(h.makeHandler(env, xenv, cont));
         Bindings bindings =

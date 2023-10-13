@@ -21,14 +21,14 @@ define List =
             filtered = .<rst>filter(f) % recursive call
           in
             if .f(fst)
-            then .<filtered>add(fst)
+            then .<filtered>listAdd(fst)
             else filtered
 
         %% return a new list by appending this list to l
-        method append = proc(l) !<rst>append(l)>add(fst)!>
+        method listAppend = proc(l) !<rst>listAppend(l)>listAdd(fst)!>
 
         %% return a new list by appending this list to itself
-	method double = proc() .<self>append(self)
+	    method double = proc() .<self>listAppend(self)
 
         %% sort this List, returning a new List
         %% uses quicksort, with the fst element of the List as pivot
@@ -38,17 +38,17 @@ define List =
             lt = !<rst>filter(proc(t) <?(t, fst))>sort()!>           
             %% sort everything in rst greater than or equal to the pivot
             %% and add the pivot to the resulting list
-            ge = !<rst>filter(proc(t) >=?(t, fst))>sort()>add(fst)!>
+            ge = !<rst>filter(proc(t) >=?(t, fst))>sort()>listAdd(fst)!>
           in
             %% combine the two halves into a single sorted list
-           .<lt>append(ge)
+           .<lt>listAppend(ge)
 
 %%%%%%%%% The above 'let' can be written as a "one-liner":
 %%        !<rst> filter(proc(t) <?(t, fst))
 %%             > sort()
-%%             > append(!<rst>filter(proc(t) >=?(t, fst))
+%%             > listAppend(!<rst>filter(proc(t) >=?(t, fst))
 %%                           >sort()
-%%                           >add(fst)
+%%                           >listAdd(fst)
 %%                      !>)
 %%        !>
 
@@ -82,10 +82,10 @@ define List =
 
         %% return a new list by applying f
         %% to all of the elements of this list
-        method map = proc(f) !<rst>map(f)>add(.f(fst))!>
+        method map = proc(f) !<rst>map(f)>listAdd(.f(fst))!>
 
         %% create a built-in list [...] from this List object
-        method toList = proc() addFirst(fst, .<rst>toList())
+        method toList = proc() add(fst, .<rst>toList())
           
       end %% of class ListNode
 
@@ -94,7 +94,7 @@ define List =
       class extends myclass
             
         method filter = proc(f) self
-        method append = proc(ys) ys
+        method listAppend = proc(ys) ys
         method double = proc() self
         method sort = proc() self
         method null? = proc() 1 %% is this null?  YES!
@@ -116,27 +116,27 @@ define List =
       else null
 
     %% add a value to this List object, returning a new List
-    method add = proc(t) .<new ListNode>init(t,self)
+    method listAdd = proc(t) .<new ListNode>init(t,self)
 
   end %% of class List
 
 %% END List
 
-let
-  a = 5
-  b = 7
-in
-  <List>!<null>add(a)>add(b)>show()!> % error -- unbound a (and b)
+%let
+%  a = 5
+%  b = 7
+%in
+%  <List>!<null>listAdd(a)>listAdd(b)>show()!> % error -- unbound a (and b)
 
 let
   a = 5
   b = 7
 in
-  !<<List>null>add(a)>add(b)>show()!> % print and return the List obj [7,5]
+  !<<List>null>listAdd(a)>listAdd(b)>show()!> % print and return the List obj [7,5]
 
 let
   a = 5
   b = 7
   null = <List>null
 in
-  !<null>add(a)>add(b)>show()!>      % print and return the List obj [7,5]
+  !<null>listAdd(a)>listAdd(b)>show()!>      % print and return the List obj [7,5]

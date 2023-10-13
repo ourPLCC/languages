@@ -1,12 +1,11 @@
-# Language LON (list of numbers)
-
-# Lexical specification
+# Language specification for a list of numbers
+# Lexical spec
 skip WHITESPACE '\s+'
 NUM '\d+'
 LPAREN '\('
 RPAREN '\)'
 %
-# Grammar
+# BNF rules
 <lon>           ::= LPAREN <nums> RPAREN
 <nums>:NumsNode ::= <NUM> <nums>
 <nums>:NumsNull ::=

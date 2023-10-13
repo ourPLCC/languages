@@ -1,20 +1,20 @@
-This ABC language directory provides a PLCC implementation of ABCDatalog,
+This ABC language directory provides a PLCC implementation of AbcDatalog,
 a subset of Prolog that implements first-order logic. See
 
     http://abcdatalog.seas.harvard.edu/
 
-for more information. ABCDatalog is NOT turing complete.
+for more information. AbcDatalog is NOT turing complete.
 
 The PLCC lexical and grammar structure of this language follows that
-of ABCDatalog.  The semantics uses Java classes drawn directly from
-the Harvard ABCDatalog implementation to drive the ABCDatalog logic
+of AbcDatalog.  The semantics uses Java classes drawn directly from
+the Harvard AbcDatalog implementation to drive the AbcDatalog logic
 engine. These classes are in a Jar file named abcdatalog.jar, which
 is included in this directory.  To compile the interpreter and to run
 programs in the ABC language, be sure to make this jar file visible to
 the Java compiler and runtime system by defining the CLASSPATH environment
-variable as follows:
+variable as follows (in the ABC language directory):
 
-    export CLASSPATH=".:../abcdatalog.jar"
+    export CLASSPATH="$PWD/Java:$PWD/abcdatalog.jar"
 
 Here is a program that you can run using the Rep loop:
 
@@ -58,7 +58,7 @@ with a clean slate.
 Examples
 --------
 
-1) The Prog directory has examples copied from the Harvard ABCDatalog
+1) The Prog directory has examples copied from the Harvard AbcDatalog
 implementation. It includes an example 'eqv' that shows how to derive an
 equivalence relation as the reflexive, symmetric, and transitive closure
 of a given relation.
@@ -128,7 +128,7 @@ will result in
 
     ident(e)
 
-3) The River directory contains ABCDatalog files for solving the river
+3) The River directory contains AbcDatalog files for solving the river
 crossing problems fox/goose/corn (FGC) and missionaries and cannibals
 (MC). The java files in this directory are used to create these files,
 specifically so that only the legal states are built and the legal

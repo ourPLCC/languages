@@ -1,6 +1,6 @@
 ContException
 %%%
-public class ContException extends RuntimeException {
+public class ContException extends PLCCException {
 
     public Val val;
 
@@ -25,11 +25,11 @@ public abstract class Cont {
     // these methods are defined in subclasses
 
     public Cont apply(Val val) {
-        throw new RuntimeException("cannot apply " + this + " to a Val");
+        throw new PLCCException("cannot apply " + this + " to a Val");
     }
 
     public Cont apply() {
-        throw new RuntimeException("cannot apply " + this);
+        throw new PLCCException("cannot apply " + this);
     }
 
     public Val trampoline() {
@@ -192,7 +192,7 @@ public class PrimappCont extends Cont {
     }
 
     public Cont apply() {
-        ArrayList<Val> valList = new ArrayList<Val>();
+        ArrayList<Val> valList = new ArrayList<Val>(expList.size());
         Iterator<Exp> expIter = expList.iterator();
         while (expIter.hasNext()) {
             Exp exp = expIter.next();
@@ -233,7 +233,7 @@ public class LetCont extends Cont {
 
     public Cont apply() {
         Iterator<Exp> expIter = expList.iterator();
-        List<Ref> refList = new ArrayList<Ref>();
+        List<Ref> refList = new ArrayList<Ref>(expList.size());
         while (expIter.hasNext()) {
             Exp exp = expIter.next(); // the next RHS expression
             Val val = exp.eval(env);
@@ -271,7 +271,7 @@ public class AppCont extends Cont {
 
     public Cont apply(Val val) {
         procVal = val;
-        List<Ref> refList = new ArrayList<Ref>();
+        List<Ref> refList = new ArrayList<Ref>(expList.size());
         Iterator<Exp> expIter = expList.iterator();
         while (expIter.hasNext()) {
             Exp exp = expIter.next();

@@ -1,6 +1,6 @@
 ValContException
 %%%
-public class ValContException extends RuntimeException {
+public class ValContException extends PLCCException {
 
     public Val val;
 
@@ -18,7 +18,7 @@ public class ValContException extends RuntimeException {
 
 RefContException
 %%%
-public class RefContException extends RuntimeException {
+public class RefContException extends PLCCException {
 
     public Ref ref;
 
@@ -36,7 +36,7 @@ public class RefContException extends RuntimeException {
 
 NullContException
 %%%
-public class NullContException extends RuntimeException {
+public class NullContException extends PLCCException {
 
     public NullContException() {
         super("Null Continuation Exception");
@@ -54,6 +54,8 @@ Cont
 import java.util.*;
 
 public abstract class Cont {
+
+    public static final HaltCont haltCont = new HaltCont();
 
     public static int count = 0;
 
@@ -76,13 +78,15 @@ public abstract class ACont extends Cont {
     // used to de-couple nested calls to apply
     public Val trampoline() {
         ACont acont = this;
-        while(true)
-	    try {
-                System.out.println(acont.sn + ": " + acont.toString());
-		acont = acont.apply();
-	    } catch (ValContException e) {
-		return e.val;
-	    }
+        try {
+            while(true) {
+                // System.out.print(".");
+                // System.out.println(acont.sn + ": " + acont.toString());
+                acont = acont.apply();
+            }
+        } catch (ValContException e) {
+            return e.val;
+        }
     }
 
     public String toString() {
@@ -147,7 +151,7 @@ public class ValToRefCont extends VCont {
 
     public ACont apply(Val val) {
         return new RefCont(new ValRef(val), rcont);
-    }
+    } 
 
 }
 %%%
@@ -185,7 +189,8 @@ public class HaltCont extends VCont {
     }
 
     public String toString() {
-        return "HaltCont";
+        return "h";
+        // return "HaltCont";
     }
 
 }

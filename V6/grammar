@@ -39,7 +39,7 @@ VAR '[A-Za-z][\w?]*'
 <exp>:IfExp    ::= IF <exp>testExp THEN <exp>trueExp ELSE <exp>falseExp
 <exp>:PrimappExp ::= <prim> LPAREN <rands> RPAREN
 <exp>:LetExp   ::= LET <letDecls> IN <exp>
-<exp>:LetrecExp ::= LETREC <letrecDecls> IN <exp>
+<exp>:LetrecExp ::= LETREC <letDecls> IN <exp>
 <exp>:ProcExp  ::= <proc>
 <exp>:AppExp   ::= DOT <exp> LPAREN <rands> RPAREN
 <exp>:SeqExp   ::= LBRACE <exp> <seqExps> RBRACE
@@ -47,7 +47,6 @@ VAR '[A-Za-z][\w?]*'
 <proc>         ::= PROC LPAREN <formals> RPAREN <exp>
 <formals>      **= <VAR> +COMMA
 <letDecls>     **= <VAR> EQUALS <exp>
-<letrecDecls>  **= <VAR> EQUALS <proc>
 <rands>        **= <exp> +COMMA
 <prim>:AddPrim ::= ADDOP
 <prim>:SubPrim ::= SUBOP
@@ -59,5 +58,5 @@ VAR '[A-Za-z][\w?]*'
 %
 include code
 include prim
-include env
+include envVal
 include val

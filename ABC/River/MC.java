@@ -33,8 +33,8 @@ public class MC {
         int sum = state[B] + state[M] + state[C];
         if (sum == 0 || sum == 7) {
             // boat on left and all MCs are on right
-            // or boat on right and all MCS are on left
-            return false;
+            // or boat on right and all MCs are on left
+            return true;
         }
         if (state[M] == 3 || state[M] == 0 || state[M] == state[C])
             return true;

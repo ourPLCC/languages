@@ -25,10 +25,10 @@ skip OTHER '.'
 
 Program
 %%%
-    public String toString() {
+    public void $run() {
         Cmd.init();
         cmds.run();
-        return "\nDone!";
+        System.out.println("\nDone!");
     }
 
 
@@ -69,9 +69,9 @@ Cmd
 LeftCmd
 %%%
     public void run() {
-        dptr--; 
+        dptr--;
         if (dptr < 0)
-            throw new RuntimeException("data pointer out of range");
+            throw new PLCCException("data pointer out of range");
     }
 %%%
 
@@ -80,7 +80,7 @@ RightCmd
     public void run() {
         dptr++;
         if (dptr >= dataSize)
-            throw new RuntimeException("data pointer out of range");
+            throw new PLCCException("data pointer out of range");
     }
 %%%
 

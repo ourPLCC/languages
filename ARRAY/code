@@ -9,20 +9,27 @@ Program
 
 Define
 %%%
-    // notice that calling toString triggers a modification
+    // notice that calling $run() triggers a modification
     // of the initial environment
-    public String toString() {
+    public void $run() {
         String id = var.toString();
-        Val val = exp.eval(initEnv);
-        initEnv.addFirst(new Binding(id, new ValRef(val)));
-        return id; // return *something*
+        Env env = Program.initEnv;
+        Val val = exp.eval(env);
+        Ref ref = new ValRef(val);
+        Binding b = env.lookup(id);
+        if (b != null)
+            b.ref = ref;
+        else
+            env.add(new Binding(id, ref));
+        System.out.println(id);
     }
 %%%
 
 Eval
 %%%
-    public String toString() {
-        return exp.eval(initEnv).toString();
+    public void $run() {
+        Val val = exp.eval(initEnv);
+        System.out.println(val);
     }
 %%%
 
@@ -73,7 +80,7 @@ LitExp
 ChrExp
 %%%
     public Val eval(Env env) {
-	return new IntVal(chr.toString().charAt(1));
+        return new IntVal(chr.toString().charAt(1));
     }
 
     public String toString() {
@@ -84,10 +91,10 @@ ChrExp
 StrngExp
 %%%
     public Val eval(Env env) {
-	String s = strng.toString();
+        String s = strng.toString();
         int len = s.length();
         s = s.substring(1,len-1);
-	return strngToList(s, 0);
+        return strngToList(s, 0);
     }
 
     private static ListVal strngToList(String s, int pos) {
@@ -108,7 +115,7 @@ StrngExp
     }
         
     public String toString() {
-	return strng.toString();
+        return strng.toString();
     }
 %%%
 
@@ -142,9 +149,8 @@ QueryExp
 %%%
     public Val eval(Env env) {
         ArrayVal ary = arrayExp.eval(env).arrayVal();
-        IntVal ndx = indexExp.eval(env).intVal();
-        int val = ndx.val;
-        return (val >= 0 && val < ary.refArray.length) ? IntVal.one : IntVal.zero;
+        int n = indexExp.eval(env).intVal().val;
+        return (n >= 0 && n < ary.size) ? IntVal.one : IntVal.zero;
     }
 
     public String toString() {
@@ -188,7 +194,7 @@ LetExp
 LetrecExp
 %%%
     public Val eval(Env env) {
-        Env nenv = letrecDecls.addBindings(env);
+        Env nenv = letDecls.addLetrecBindings(env);
         return exp.eval(nenv);
     }
 
@@ -224,8 +230,8 @@ WhileExp
 ArrayExp
 %%%
     public Val eval(Env env) {
-        IntVal v = exp.eval(env).intVal();
-        return new ArrayVal(v.val);
+        int n = exp.eval(env).intVal().val;
+        return new ArrayVal(n);
     }
 
     public String toString() {
@@ -236,17 +242,17 @@ ArrayExp
 ListExp
 %%%
     public Val eval(Env env) {
-	List<Val> valList = rands.evalRands(env);
-	ListVal listVal = new ListNull();
-	int n = valList.size();
-	// process the elements in reverse order
-	while (n > 0)
-	    listVal = new ListNode(valList.get(--n), listVal);
-	return listVal;
+        List<Val> valList = rands.evalRands(env);
+        ListVal listVal = new ListNull();
+        int n = valList.size();
+        // process the elements in reverse order
+        while (n > 0)
+            listVal = new ListNode(valList.get(--n), listVal);
+        return listVal;
     }
 
     public String toString() {
-	return " ...ListExp... ";
+        return " ...ListExp... ";
     }
 %%%
 
@@ -261,29 +267,30 @@ ClassExp
 ClassDecl
 %%%
     public Val eval(Env env) {
-	ClassVal superClass = ext.toClassVal(env);
-        return new StdClass(superClass, statics, fields, methods);
+        ClassVal superClass = ext.toClassVal(env);
+        return new StdClass(env, superClass, statics, fields, methods);
     }
+%%%
+
+Statics:init
+%%%
+        Env.checkDuplicates(varList, " in static variable definitions");
 %%%
 
 Statics
 %%%
     // Add new bindings to the static bindings -- behaves like top-level
-    // defines.  Don't allow a redefinition of a binding that already
-    // occurs in the static bindings.
-    public void addStaticBindings(Bindings staticBindings, Env staticEnv) {
+    // defines.
+    public void addStaticBindings(Env env) {
         Iterator<Token> varIter = varList.iterator(); // LHS identifiers
         Iterator<Exp> expIter = expList.iterator();    // RHS expressions
         while(varIter.hasNext()) {
-            String id = varIter.next().toString(); // the LHS identifier
-            for (Binding b : staticBindings.bindingList) {
-                if (id.equals(b.id))
-                    throw new RuntimeException(id + ": multiply defined static identifier");
-            }
+            Token var = varIter.next();
+            String id = var.toString(); // the LHS identifier
             Exp exp = expIter.next();    // the RHS expression
-            Val val = exp.eval(staticEnv);
-            Binding b = new Binding(id, new ValRef(val));
-            staticBindings.add(b);
+            Val val = exp.eval(env);
+            Ref ref = new ValRef(val);
+            env.add(new Binding(id, ref));
         }
     }
 %%%
@@ -435,7 +442,7 @@ SendExp
 AtExp
 %%%
     public Val eval(Env env) {
-        return new ObjectVal(null, env);
+        return new ObjectVal(env);
     }
 
 %%%
@@ -444,7 +451,7 @@ AtAtExp
 %%%
     public Val eval(Env env) {
         System.out.println(env.toString());
-        return new ObjectVal(null, env);
+        return new ObjectVal(env);
     }
 %%%
 
@@ -489,7 +496,7 @@ PutcExp
 ErrorExp
 %%%
     public Val eval(Env env) {
-	throw new RuntimeException("!!error!!");
+        throw new PLCCException("!!error!!");
     }
 %%%
 
@@ -502,7 +509,7 @@ Ext0
 %%%
 
     public ClassVal toClassVal(Env env) {
-        return new EnvClass(env);
+        return EnvClass.envClass; // a singleton
     }
 
 %%%
@@ -512,9 +519,15 @@ Ext1
     public ClassVal toClassVal(Env env) {
         Val v = exp.eval(env);
         if (! (v instanceof ClassVal))
-            throw new RuntimeException("cannot extend a non-class");
+            throw new PLCCException("cannot extend a non-class");
         return v.classVal();
     }
+%%%
+
+Formals:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in proc formals");
 %%%
 
 Proc
@@ -525,39 +538,37 @@ Proc
 
 %%%
 
+LetDecls:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in let/letrec LHS identifiers");
+%%%
+
 LetDecls
 %%%
     public Env addBindings(Env env) {
-	Rands rands = new Rands(expList);
-	List<Val> valList = rands.evalRands(env);
-	List<Ref> refList = Ref.valsToRefs(valList);
-	Bindings bindings = new Bindings(varList, refList);
+        Rands rands = new Rands(expList);
+        List<Val> valList = rands.evalRands(env);
+        List<Ref> refList = Ref.valsToRefs(valList);
+        Bindings bindings = new Bindings(varList, refList);
         return env.extendEnvRef(bindings);
+    }
+
+    public Env addLetrecBindings(Env env) {
+        env = env.extendEnvRef(new Bindings());
+        Iterator<Token> varIter = varList.iterator();
+        Iterator<Exp> expIter = expList.iterator();
+        while (varIter.hasNext()) {
+            String str = varIter.next().toString();
+            Val val = expIter.next().eval(env);
+            Ref ref = new ValRef(val);
+            env.add(new Binding(str, ref));
+        }
+        return env;
     }
 
     public String toString() {
         return " ...LetDecls... ";
-    }
-%%%
-
-LetrecDecls
-%%%
-    public Env addBindings(Env env) {
-        Env nenv = env.extendEnvRef(null); // no bindings yet
-        List<Val> valList = new ArrayList<Val>();
-        for (Proc p : procList)
-            valList.add(p.makeClosure(nenv));
-	List<Ref> refList = Ref.valsToRefs(valList);
-        Bindings bindings = new Bindings(varList, refList);
-	nenv.replaceBindings(bindings);
-	return nenv;
-    }
-
-    public Bindings toBindingsRef(Env env) {
-        List<Ref> refList = new ArrayList<Ref>();
-        for (Proc p : procList)
-            refList.add(new ValRef(p.makeClosure(env)));
-        return new Bindings(varList, refList);
     }
 %%%
 
@@ -575,7 +586,7 @@ Rands
     }
 
     public List<Val> evalRands(Env env) {
-        List<Val> valList = new ArrayList<Val>();
+        List<Val> valList = new ArrayList<Val>(expList.size());
         for (Exp e : expList)
             valList.add(e.eval(env));
         return valList;

@@ -12,33 +12,40 @@ NUM '\d+'
 <nums>:NumsNull ::=
 %
 
-# add a toString method to the Lon class
+# The $run() method in the Lon class
+# displays the minimum value in the list
 Lon
 %%%
-    public String toString() {
-	int minSoFar = Integer.parseInt(num.toString());
-	int m = nums.min(minSoFar); // get the overall minimum
-        return "minimum value = " + m;
+    public void $run() {
+        int m = Integer.parseInt(num.toString()); // the first number
+        m = nums.min(m); // get the overall minimum
+        System.out.println("minimum value = " + m);
     }
 %%%
 
+# must declare 'min' as abstract in the Nums base class 
+# that extends NumsNode and NumsNull
 Nums
 %%%
-    public abstract int min(int minSoFar);
+    public abstract int min(int m);
 %%%
 
 NumsNode
 %%%
-    public int min(int minSoFar) {
-	return 0; // This is just a stub. Remove this line ...
-        // ... and complete the method definition
+    public int min(int m) {
+        return 0; // This is just a stub. Remove this line ...
+        // ... and complete the method definition.
+        // This will be recursive!
+        // What are the fields in this class??
+        // Your definition should use all of the fields!
     }
 %%%
 
 NumsNull
 %%%
-    public int min(int minSoFar) {
+    public int min(int m) {
         return 0; // This is just a stub. Remove this line ...
         // ... and complete the method definition
+        // What are the fields in this class??
     }
 %%%

@@ -10,16 +10,16 @@ public abstract class Val {
     }
 
     public IntVal intVal() {
-        throw new RuntimeException(this + ": not an int");
-    }
-
-    public ProcVal procVal() {
-        throw new RuntimeException(this + ": not a proc");
+        throw new PLCCException(this + ": not an int");
     }
 
     // everything defaults to true except for an IntVal of zero
     public boolean isTrue() {
         return true;
+    }
+
+    public ProcVal procVal() {
+        throw new PLCCException(this + ":not a proc");
     }
 }
 %%%
@@ -72,20 +72,20 @@ public class ProcVal extends Val {
         this.env = env;
     }
 
+    public ProcVal procVal() {
+        return this;
+    }
+
     public ACont apply(List<Ref> refList, VCont vcont) {
         Env env = this.env; // local copy of the captured environment
         List<Token> varList = formals.varList;
         if (refList.size() != varList.size())
-            throw new RuntimeException("formal/actual parameter mismatch");
-	if (varList.size() > 0) {
+            throw new PLCCException("formal/actual parameter mismatch");
+        if (varList.size() > 0) {
             Bindings bindings = new Bindings(varList, refList);
             env = env.extendEnvRef(bindings);
         }
         return new EvalCont(body, env, vcont);
-    }
-
-    public ProcVal procVal() {
-        return this;
     }
 
     public boolean isTrue() {

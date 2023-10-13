@@ -10,19 +10,19 @@ public abstract class Val {
     }
 
     public boolean isTrue() {
-	throw new RuntimeException("boolean expression expected");
+        throw new PLCCException("boolean expression expected");
     }
 
     public IntVal intVal() {
-        throw new RuntimeException(this + ": not an Int");
-    }
-
-    public ProcVal procVal() {
-        throw new RuntimeException(this + ": not a Proc");
+        throw new PLCCException(this + ": not an Int");
     }
 
     public BoolVal boolVal() {
-        throw new RuntimeException(this + ": not a Bool");
+        throw new PLCCException(this + ": not a Bool");
+    }
+
+    public Val apply(List<Ref> refList) {
+        throw new PLCCException("cannot apply "+this);
     }
         
 }
@@ -36,11 +36,11 @@ public class IntVal extends Val {
     public int val;
     
     public IntVal(String s) {
-	val = Integer.parseInt(s);
+        val = Integer.parseInt(s);
     }
     
     public IntVal(int v) {
-	val = v;
+        val = v;
     }
 
     public IntVal intVal() {
@@ -48,21 +48,16 @@ public class IntVal extends Val {
     }
     
     public String toString() {
-	return "" + val;
+        return "" + val;
     }
 
-    public static void main(String [] args) {
-	Val v = new IntVal(3);
-	Val w = new IntVal(0);
-	System.out.println("v=" + v);
-	System.out.println("w=" + w);
-    }
-    
 }
 %%%
 
 ProcVal
 %%%
+import java.util.*;
+
 public class ProcVal extends Val {
 
     public Formals formals;
@@ -70,13 +65,15 @@ public class ProcVal extends Val {
     public Env env;
 
     public ProcVal(Formals formals, Exp body, Env env) {
-	this.formals = formals;
+        this.formals = formals;
         this.body = body;
         this.env = env;
     }
 
-    public ProcVal procVal() {
-        return this;
+    public Val apply(List<Ref> refList) {
+        Bindings bindings = new Bindings(formals.varList, refList);
+        Env nenv = env.extendEnvRef(bindings);
+        return body.eval(nenv);
     }
 
     public String toString() {
@@ -94,11 +91,11 @@ public class BoolVal extends Val {
     public boolean val;
     
     public BoolVal(boolean b) {
-	val = b;
+        val = b;
     }
     
     public boolean isTrue() {
-	return val;
+        return val;
     }
 
     public BoolVal boolVal() {
@@ -106,15 +103,8 @@ public class BoolVal extends Val {
     }
     
     public String toString() {
-	return "" + val;
+        return "" + val;
     }
 
-    public static void main(String [] args) {
-	Val t = new BoolVal(true);
-	Val f = new BoolVal(false);
-	System.out.println("t=" + t);
-	System.out.println("f=" + f);
-    }
-    
 }
 %%%

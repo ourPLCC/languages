@@ -1,7 +1,4 @@
-{
-  def fact = proc(x)
-    { if x then x*.fact(sub1(x)) else one endif };
-  def one = 1;
-
-  .fact(5)
-} ;
+define fact = proc(x)
+  { if x then x*fact(x-1) else one endif };
+define one = 1;
+fact(5);

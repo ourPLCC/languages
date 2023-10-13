@@ -6,10 +6,10 @@ define printable =
     letrec
       loop = proc() 
         if >=?(x,32)
-        then {set lst = addFirst(x, lst) ; set x=sub1(x) ; .loop()}
+        then {set lst = add(x, lst) ; set x=sub1(x) ; .loop()}
         else lst
     in
       .loop()
 
 { display printable ; newline }
-{ putc printable ; newline }
+{ puts printable ; newline }

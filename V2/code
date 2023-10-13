@@ -5,8 +5,8 @@ Program
 
     public static Env env = Env.initEnv(); // the initial environment
 
-    public String toString() {
-	return exp.eval(env).toString();
+    public void $run() {
+        System.out.println(exp.eval(env).toString());
     }
 
 %%%
@@ -20,14 +20,14 @@ PrimappExp
 %%%
 
     public String toString() {
-	return prim.toString()+ "(" + rands + ")";
+        return prim.toString()+ "(" + rands + ")";
     }
 
     public Val eval(Env env) {
         // evaluate the terms in the expression list
-	// and apply the prim to the array of integer results
+        // and apply the prim to the array of integer results
         List<Val> args = rands.evalRands(env);
-	Val [] va = Val.toArray(args);
+        Val [] va = Val.toArray(args);
         return prim.apply(va);
     }
 
@@ -37,11 +37,11 @@ LitExp
 %%%
 
     public Val eval(Env env) {
-	return new IntVal(lit.toString());
+        return new IntVal(lit.toString());
     }
 
     public String toString() {
-	return lit.toString();
+        return lit.toString();
     }
 
 %%%
@@ -51,7 +51,7 @@ IfExp
     public Val eval(Env env) {
         Val testVal = testExp.eval(env);
         if (testVal.isTrue())
-	    return trueExp.eval(env);
+            return trueExp.eval(env);
         else
             return falseExp.eval(env);
     }
@@ -65,11 +65,11 @@ VarExp
 %%%
 
     public Val eval(Env env) {
-	return env.applyEnv(var);
+        return env.applyEnv(var);
     }
 
     public String toString() {
-	return var.toString();
+        return var.toString();
     }
 
 %%%
@@ -88,11 +88,9 @@ Rands
     }
 
     public List<Val> evalRands(Env env) {
-        List<Val> args = new ArrayList<Val>();
+        List<Val> args = new ArrayList<Val>(expList.size());
         for (Exp e : expList)
             args.add(e.eval(env));
         return args;
     }
 %%%
-
-

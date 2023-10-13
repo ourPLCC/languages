@@ -1,7 +1,4 @@
 # Environment-related classes
-# The initial environment has bindings to a small collection
-#   of Roman Numerals
-# This version has some test code
 
 Env
 %%%
@@ -9,30 +6,40 @@ import java.util.*;
 
 public abstract class Env {
 
-    public abstract Val applyEnv(String sym);
+    public static final Env empty = new EnvNull();
+
+    public abstract void add(Binding b);
 
     public static Env initEnv() {
-	// Create bindings for some symbols
-	List<Binding> bindingList = Arrays.asList(
-	    new Binding("i", new IntVal(1)),
-	    new Binding("v", new IntVal(5)),
-	    new Binding("x", new IntVal(10)),
-	    new Binding("l", new IntVal(50)),
-	    new Binding("c", new IntVal(100)),
-	    new Binding("d", new IntVal(500)),
-	    new Binding("m", new IntVal(1000)));
-        return new EnvNode(new Bindings(bindingList), new EnvNull());
+        // Create bindings for some symbols
+        List<Binding> bindingList = Arrays.asList(
+            new Binding("i", new IntVal(1)),
+            new Binding("v", new IntVal(5)),
+            new Binding("x", new IntVal(10)),
+            new Binding("l", new IntVal(50)),
+            new Binding("c", new IntVal(100)),
+            new Binding("d", new IntVal(500)),
+            new Binding("m", new IntVal(1000)));
+        return new EnvNode(new Bindings(bindingList), empty);
+    }
+
+    public abstract Binding lookup(String sym);
+
+    public Val applyEnv(String sym) {
+        Binding b = lookup(sym);
+        if (b != null)
+            return b.val;
+        throw new PLCCException("no binding for "+sym);
     }
 
     public Val applyEnv(Token tok) {
-	return applyEnv(tok.toString());
+        return applyEnv(tok.toString());
     }
 
     public Env extendEnv(Bindings bindings) {
-	return new EnvNode(bindings, this);
+        return new EnvNode(bindings, this);
     }
 
-    // used to print an environment in nested local bindings
     public abstract String toString(int n);
 
 }
@@ -49,26 +56,27 @@ public class EnvNode extends Env {
     
     // create an environment 
     public EnvNode(Bindings bindings, Env env) {
-	this.bindings = bindings;
-	this.env = env;
+        this.bindings = bindings;
+        this.env = env;
+    }
+
+    public Binding lookup(String sym) {
+        for (Binding b: bindings.bindingList)
+            if (sym.equals(b.id))
+                return b;
+        return env.lookup(sym);
     }
     
-    public Val applyEnv(String sym) {
-        // first look in the local bindings
-	for (Binding b : bindings.bindingList) {
-	    if (sym.equals(b.id))
-                return b.val;
-        }
-	// if nothing left, we don't have a match in this list of bindings
-	return env.applyEnv(sym);
+    public void add(Binding b) {
+        bindings.add(b);
     }
 
     public String toString(int n) {
-	return n + ":" + bindings.toString() + "\n" + env.toString(n+1);
-    }
+        return n + ":" + bindings.toString() + "\n" + env.toString(n+1);
+    } 
 
     public String toString() {
-	return bindings.toString() + "\n" + env;
+        return bindings.toString() + "----\n" + env;
     }
 
 }
@@ -86,15 +94,23 @@ public class EnvNull extends Env {
     
     // find the Val corresponding to a given id
     public Val applyEnv(String sym) {
-        throw new RuntimeException("no binding for "+sym);
+        throw new PLCCException("no binding for "+sym);
+    }
+
+    public Binding lookup(String sym) {
+        return null;
+    }
+
+    public void add(Binding b) {
+        throw new PLCCException("no bindings to add to");
     }
 
     public String toString(int n) {
-	return n + ":\n";
+        return n + ":\n";
     }
 
     public String toString() {
-	return "\n";
+        return "\n";
     }
 }
 %%%
@@ -107,12 +123,12 @@ public class Binding {
     public Val val;
 
     public Binding(String id, Val val) {
-	this.id = id;
-	this.val = val;
+        this.id = id;
+        this.val = val;
     }
 
     public String toString() {
-	return "[" + id + "->" + val.toString() + "]";
+        return "[" + id + ":" + val.toString() + "]";
     }
 
 }
@@ -128,50 +144,45 @@ public class Bindings {
 
     // create an empty list of bindings
     public Bindings() {
-	bindingList = new ArrayList<Binding>();
+        bindingList = new ArrayList<Binding>();
     }
 
     public Bindings(List<Binding> bindingList) {
-	this.bindingList = bindingList;
+        this.bindingList = bindingList;
     }
 
     // idList is a list of Tokens/Strings (whatever has a toString())
     // valList is a list of Vals
     public Bindings(List<?> idList, List<Val> valList) {
-	if (idList.size() != valList.size())
-	    throw new RuntimeException("Bindings: List size mismatch");
-	bindingList = new ArrayList<Binding>();
-	Iterator<?> is = idList.iterator();
-	Iterator<Val> vs = valList.iterator();
-	while (is.hasNext())
-	    bindingList.add(new Binding(is.next().toString(), vs.next()));
+        if (idList.size() != valList.size())
+            throw new PLCCException("List sizes mismatch");
+        bindingList = new ArrayList<Binding>();
+        Iterator<?> idIterator = idList.iterator();
+        Iterator<Val> valIterator = valList.iterator();
+        while (idIterator.hasNext()) {
+            String s = idIterator.next().toString();
+            Val v = valIterator.next();
+            bindingList.add(new Binding(s, v));
+        }
     }
 
     public void add(Binding b) {
-	bindingList.add(b);
+        bindingList.add(b);
     }
 
     public void add(String s, Val v) {
-	add(new Binding(s, v));
-    }
-
-    public void addFirst(Binding b) {
-	bindingList.add(0,b);
-    }
-
-    public void addFirst(String s, Val v) {
-	addFirst(new Binding(s, v));
+        add(new Binding(s, v));
     }
 
     public int size() {
-	return bindingList.size();
+        return bindingList.size();
     }
 
     public String toString() {
-	String s = "";
-	for (Binding b : bindingList)
-	    s += " " + b;
-	return s;
+        String s = "";
+        for (Binding b : bindingList)
+            s += " " + b;
+        return s;
     }
 }
 %%%

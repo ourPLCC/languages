@@ -9,17 +9,17 @@ AddPrim
 %%%
 
     public String toString() {
-	return "+";
+        return "+";
     }
 
     public Val apply(Val [] va) {
-	int i0 = va[0].intVal().val;
-	int i1 = va[1].intVal().val;
-	return new IntVal(i0 + i1);
+        int i0 = va[0].intVal().val;
+        int i1 = va[1].intVal().val;
+        return new IntVal(i0 + i1);
     }
 
     public ProcType definedType() {
-	return Type.ii_i;
+        return Type.ii_i;
     }
 %%%
 
@@ -27,17 +27,17 @@ SubPrim
 %%%
 
     public String toString() {
-	return "-";
+        return "-";
     }
 
     public Val apply(Val [] va) {
-	int i0 = va[0].intVal().val;
-	int i1 = va[1].intVal().val;
-	return new IntVal(i0 - i1);
+        int i0 = va[0].intVal().val;
+        int i1 = va[1].intVal().val;
+        return new IntVal(i0 - i1);
     }
 
     public ProcType definedType() {
-	return Type.ii_i;
+        return Type.ii_i;
     }
 %%%
 
@@ -45,17 +45,17 @@ MulPrim
 %%%
 
     public String toString() {
-	return "*";
+        return "*";
     }
 
     public Val apply(Val [] va) {
-	int i0 = va[0].intVal().val;
-	int i1 = va[1].intVal().val;
-	return new IntVal(i0 * i1);
+        int i0 = va[0].intVal().val;
+        int i1 = va[1].intVal().val;
+        return new IntVal(i0 * i1);
     }
 
     public ProcType definedType() {
-	return Type.ii_i;
+        return Type.ii_i;
     }
 
 %%%
@@ -64,19 +64,19 @@ DivPrim
 %%%
 
     public String toString() {
-	return "/";
+        return "/";
     }
 
     public Val apply(Val [] va) {
-	int i0 = va[0].intVal().val;
-	int i1 = va[1].intVal().val;
-	if (i1 == 0)
-            throw new RuntimeException("attempt to divide by zero");
-	return new IntVal(i0 / i1);
+        int i0 = va[0].intVal().val;
+        int i1 = va[1].intVal().val;
+        if (i1 == 0)
+            throw new PLCCException("attempt to divide by zero");
+        return new IntVal(i0 / i1);
     }
 
     public ProcType definedType() {
-	return Type.ii_i;
+        return Type.ii_i;
     }
 
 %%%
@@ -85,16 +85,16 @@ Add1Prim
 %%%
 
     public String toString() {
-	return "add1";
+        return "add1";
     }
 
     public Val apply(Val [] va) {
-	int i0 = va[0].intVal().val;
-	return new IntVal(i0 + 1);
+        int i0 = va[0].intVal().val;
+        return new IntVal(i0 + 1);
     }
 
     public ProcType definedType() {
-	return Type.i_i;
+        return Type.i_i;
     }
 
 %%%
@@ -103,16 +103,16 @@ Sub1Prim
 %%%
 
     public String toString() {
-	return "sub1";
+        return "sub1";
     }
 
     public Val apply(Val [] va) {
-	int i0 = va[0].intVal().val;
-	return new IntVal(i0 - 1);
+        int i0 = va[0].intVal().val;
+        return new IntVal(i0 - 1);
     }
 
     public ProcType definedType() {
-	return Type.i_i;
+        return Type.i_i;
     }
 
 %%%
@@ -121,16 +121,16 @@ ZeropPrim
 %%%
 
     public String toString() {
-	return "zero?";
+        return "zero?";
     }
 
     public Val apply(Val [] va) {
-	int i0 = va[0].intVal().val;
-	return new BoolVal(i0 == 0);
+        int i0 = va[0].intVal().val;
+        return new BoolVal(i0 == 0);
     }
 
     public ProcType definedType() {
-	return Type.i_b;
+        return Type.i_b;
     }
 
 %%%
@@ -244,9 +244,9 @@ AndPrim
     }
 
     public Val apply(Val [] va) {
-	boolean b0 = va[0].boolVal().val;
-	boolean b1 = va[1].boolVal().val;
-	return new BoolVal(b0 && b1);
+        boolean b0 = va[0].boolVal().val;
+        boolean b1 = va[1].boolVal().val;
+        return new BoolVal(b0 && b1);
     }
 
     public ProcType definedType() {
@@ -261,9 +261,9 @@ OrPrim
     }
 
     public Val apply(Val [] va) {
-	boolean b0 = va[0].boolVal().val;
-	boolean b1 = va[1].boolVal().val;
-	return new BoolVal(b0 || b1);
+        boolean b0 = va[0].boolVal().val;
+        boolean b1 = va[1].boolVal().val;
+        return new BoolVal(b0 || b1);
     }
 
     public ProcType definedType() {
@@ -278,8 +278,8 @@ NotPrim
     }
 
     public Val apply(Val [] va) {
-	boolean b0 = va[0].boolVal().val;
-	return new BoolVal(!b0);
+        boolean b0 = va[0].boolVal().val;
+        return new BoolVal(!b0);
     }
 
     public ProcType definedType() {

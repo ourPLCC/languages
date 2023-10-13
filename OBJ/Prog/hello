@@ -2,7 +2,7 @@ define charList = class
   field fst 
   field rst
   method init = proc(l, r) {set fst = l ; set rst = r ; self}
-  method add = proc(x) .<new myclass>init(x, self)
+  method charAdd = proc(x) .<new myclass>init(x, self)
   method print = proc()
      if fst
      then {.<rst>print() ; putc fst}
@@ -11,17 +11,17 @@ define charList = class
     {.print() ; newline ; self}
 end
 
-!<new charList> add('H)
-              > add('e)
-              > add('l)
-              > add('l)
-              > add('o)
-              > add(' )
-              > add('w)
-              > add('o)
-              > add('r)
-              > add('l)
-              > add('d)
+!<new charList> charAdd('H)
+              > charAdd('e)
+              > charAdd('l)
+              > charAdd('l)
+              > charAdd('o)
+              > charAdd(' )
+              > charAdd('w)
+              > charAdd('o)
+              > charAdd('r)
+              > charAdd('l)
+              > charAdd('d)
               > println()
               > println()
               > println()
@@ -30,5 +30,5 @@ end
               > println()
 !>
 
-{putc '? ; putc "Hello world" ; putc '? ; newline}
+{putc '* ; puts "Hello world" ; putc '* ; newline}
 

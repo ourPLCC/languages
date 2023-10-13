@@ -1,5 +1,5 @@
 # Language REFCONT
-#   Language REF with continuations
+#   Language REF with continuations (but letrec only supports procs)
 
 # Lexical specification
 skip WHITESPACE '\s+'
@@ -60,7 +60,7 @@ VAR '[A-Za-z][\w?]*'
 %
 include code
 include prim
-include env
+include envRef
 include val
 include ref
 include cont

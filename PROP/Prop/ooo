@@ -2,7 +2,6 @@ define o =
   new
     class
       static x = 3
-      static p = proc(t) set t = add1(t)
       property x = prop 11 : nil
       property y = prop 4 : nil
     end

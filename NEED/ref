@@ -5,7 +5,7 @@ import java.util.*;
 public abstract class Ref {
 
     public static List<Ref> valsToRefs(List<Val> valList) {
-        List<Ref> refList = new ArrayList<Ref>();
+        List<Ref> refList = new ArrayList<Ref>(valList.size());
         for (Val v : valList)
             refList.add(new ValRef(v));
         return refList;
@@ -41,7 +41,11 @@ public class ThunkRef extends Ref {
     }
 
     public Val setRef(Val v) {
-	throw new RuntimeException("cannot modify a read-only expression");
+        throw new PLCCException("cannot modify a read-only expression");
+    }
+
+    public String toString() {
+        return "thunk";
     }
 
 }
@@ -67,6 +71,10 @@ public class ValRef extends Ref {
         return val = v;
     }
 
+    public String toString() {
+        return val.toString();
+    }
+
 }
 %%%
 
@@ -81,7 +89,7 @@ public class ValRORef extends ValRef {
     }
 
     public Val setRef(Val v) {
-        throw new RuntimeException("cannot modify a read-only reference");
+        throw new PLCCException("cannot modify a read-only reference");
     }
 
 }

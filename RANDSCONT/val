@@ -10,15 +10,11 @@ public abstract class Val {
     }
 
     public Cont apply(List<Ref> refList, Cont cont) {
-        throw new RuntimeException("Cannot apply " + this.toString());
+        throw new PLCCException("Cannot apply " + this.toString());
     }
 
     public IntVal intVal() {
-        throw new RuntimeException(this + ": not an Int");
-    }
-
-    public ProcVal procVal() {
-        throw new RuntimeException(this + ": not a Proc");
+        throw new PLCCException(this + ": not an Int");
     }
 
     // everything defaults to true except for an IntVal of zero
@@ -78,7 +74,7 @@ public class ProcVal extends Val {
 
     public Cont apply(List<Ref> refList, Cont cont) {
         Env env = bodyEnv; // the captured environment
-	if (refList.size() > 0) {
+        if (refList.size() > 0) {
             Bindings bindings = new Bindings(formals.varList, refList);
             env = env.extendEnvRef(bindings);
         }

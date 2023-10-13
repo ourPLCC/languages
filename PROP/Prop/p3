@@ -1,3 +1,4 @@
+% this works because PROP uses call-by-reference semantics
 define while = proc(test?, do, result)
   letrec loop = proc()
     if test? then { do ; .loop() } else result
@@ -13,4 +14,3 @@ in
     result = prop sum
   in
     .while(test?, do, result)
-

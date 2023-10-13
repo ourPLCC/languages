@@ -7,19 +7,26 @@ Program
 
 Define
 %%%
-    // notice that calling toString triggers a modification
+    // notice that calling $run() triggers a modification
     // of the initial environment
-    public String toString() {
-        Val val = exp.eval(Program.env);
-        Program.env.addFirst(new Binding(var.toString(), val));
-	return var.toString(); // gotta return *something*
+    public void $run() {
+        Env env = Program.env;       // the top-level environment
+        String id = var.toString();  // the LHS of the define
+        Val val = exp.eval(env);     // the RHS value
+        Binding b = env.lookup(id);  // only look at local bindings
+        if (b != null)
+            b.val = val;             // replace the binding
+        else
+            env.add(new Binding(id, val));
+        System.out.println(id);
     }
 %%%
 
 Eval
 %%%
-    public String toString() {
-	return exp.eval(Program.env).toString();
+    public void $run() {
+        Val val = exp.eval(Program.env);
+        System.out.println(val);
     }
 %%%
 
@@ -32,14 +39,14 @@ PrimappExp
 %%%
 
     public String toString() {
-	return prim.toString()+ "(" + rands + ")";
+        return prim.toString()+ "(" + rands + ")";
     }
 
     public Val eval(Env env) {
         // evaluate the terms in the expression list
-	// and apply the prim to the array of integer results
+        // and apply the prim to the array of integer results
         List<Val> args = rands.evalRands(env);
-	Val [] va = Val.toArray(args);
+        Val [] va = Val.toArray(args);
         return prim.apply(va);
     }
 
@@ -49,11 +56,11 @@ LitExp
 %%%
 
     public Val eval(Env env) {
-	return new IntVal(lit.toString());
+        return new IntVal(lit.toString());
     }
 
     public String toString() {
-	return lit.toString();
+        return lit.toString();
     }
 
 %%%
@@ -63,7 +70,7 @@ IfExp
     public Val eval(Env env) {
         Val testVal = testExp.eval(env);
         if (testVal.isTrue())
-	    return trueExp.eval(env);
+            return trueExp.eval(env);
         else
             return falseExp.eval(env);
     }
@@ -77,11 +84,11 @@ VarExp
 %%%
 
     public Val eval(Env env) {
-	return env.applyEnv(var);
+        return env.applyEnv(var);
     }
 
     public String toString() {
-	return var.toString();
+        return var.toString();
     }
 
 %%%
@@ -89,20 +96,20 @@ VarExp
 LetExp
 %%%
     public Val eval(Env env) {
-	Env nenv = letDecls.addBindings(env);
-	return exp.eval(nenv);
+        Env nenv = letDecls.addBindings(env);
+        return exp.eval(nenv);
     }
 
     public String toString() {
-	return " ...LetExp... ";
+        return " ...LetExp... ";
     }
 %%%
 
 LetrecExp
 %%%
     public Val eval(Env env) {
-	Env nenv = letrecDecls.addBindings(env);
-	return exp.eval(nenv);
+        Env nenv = letDecls.addLetrecBindings(env);
+        return exp.eval(nenv);
     }
 
     public String toString() {
@@ -113,7 +120,7 @@ LetrecExp
 ProcExp
 %%%
     public Val eval(Env env) {
-	return proc.makeClosure(env);
+        return proc.makeClosure(env);
     }
 
     public String toString() {
@@ -127,7 +134,7 @@ AppExp
     public Val eval(Env env) {
         Val p = exp.eval(env);
         List<Val> args = rands.evalRands(env);
-	return p.apply(args, env);
+        return p.apply(args, env);
     }
 
     public String toString() {
@@ -154,22 +161,31 @@ SeqExp
 ListExp
 %%%
     public Val eval(Env env) {
-        List<Val> valList = new LinkedList<Val>();
-	// the valList values will appear in reverse order
+        ListVal lst = ListVal.empty; // start with the empty list
+        // the elements will be added in reverse order
         for (Exp e : rands.expList)
-	    valList.add(0, e.eval(env));
-	ListVal lst = ListVal.listNull; // start with the empty list
-	for (Val v : valList)
-	    lst = lst.addFirst(v);
-	return lst;
+            lst = lst.add(e.eval(env));
+        return lst.reverse();
     }
+%%%
+
+Formals:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in proc formals");
 %%%
 
 Proc
 %%%
     public Val makeClosure(Env env) {
-	return new ProcVal(formals, exp, env);
+        return new ProcVal(formals, exp, env);
     }
+%%%
+
+LetDecls:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in let/letrec LHS identifiers");
 %%%
 
 LetDecls
@@ -181,21 +197,20 @@ LetDecls
         return env.extendEnv(bindings);
     }
 
-    public String toString() {
-	return " ...LetDecls... ";
+    public Env addLetrecBindings(Env env) {
+        env = env.extendEnv(new Bindings());
+        Iterator<Token> varIter = varList.iterator();
+        Iterator<Exp> expIter = expList.iterator();
+        while (varIter.hasNext()) {
+            String str = varIter.next().toString();
+            Val val = expIter.next().eval(env);
+            env.add(new Binding(str, val));
+        }
+        return env;
     }
-%%%
 
-LetrecDecls
-%%%
-    public Env addBindings(Env env) {
-        Env nenv = env.extendEnv(null); // no bindings yet
-        List<Val> valList = new ArrayList<Val>();
-        for (Proc p : procList)
-            valList.add(p.makeClosure(nenv));
-        Bindings bindings = new Bindings(varList, valList);
-        nenv.replaceBindings(bindings);
-        return nenv;
+    public String toString() {
+        return " ...LetDecls... ";
     }
 %%%
 
@@ -215,7 +230,7 @@ Rands
     // evaluate the individual terms in expList using the given environment
     // and return a List<Val> object
     public List<Val> evalRands(Env env) {
-        List<Val> args = new ArrayList<Val>();
+        List<Val> args = new ArrayList<Val>(expList.size());
         for (Exp e : expList)
             args.add(e.eval(env));
         return args;

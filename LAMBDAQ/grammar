@@ -22,18 +22,18 @@ SYM '\w+'
 
 Test
 %%%
-public String toString() {
+public void $run() {
     // return "exp="+exp;
     String s = "";
     String ss = "in " + exp + ", " + sym + " occurs ";
     if (exp.occursFree(sym.toString())) {
         s += ss + "free";
-	ss = " and ";
+        ss = " and ";
     }
     if (exp.occursBound(sym.toString())) {
         s += ss + "bound";
     }
-    return s;
+    System.out.println(s);
 }
 %%%
 

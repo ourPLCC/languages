@@ -4,25 +4,33 @@ Program
 %%%
 
     public static Env initEnv = Env.initEnv();
+    // public void $ok() { }
 
 %%%
 
 Define
 %%%
-    // notice that calling toString triggers a modification
+    // notice that calling $run() triggers a modification
     // of the initial environment
-    public String toString() {
+    public void $run() {
         String id = var.toString();
-        Val val = exp.eval(initEnv);
-        initEnv.addFirst(new Binding(id, new ValRef(val)));
-        return id; // return *something*
+        Env env = Program.initEnv;
+        Val val = exp.eval(env);
+        Ref ref = new ValRef(val);
+        Binding b = env.lookup(id);
+        if (b != null)
+            b.ref = ref;
+        else
+            env.add(new Binding(id, ref));
+        System.out.println(id);
     }
 %%%
 
 Eval
 %%%
-    public String toString() {
-        return exp.eval(initEnv).toString();
+    public void $run() {
+        Val val = exp.eval(initEnv);
+        System.out.println(val);
     }
 %%%
 
@@ -34,7 +42,9 @@ Exp
 ExitExp
 %%%
     public Val eval(Env env) {
-        throw new RuntimeException("...exiting...");
+        System.exit(0);
+        return Val.nil;
+        // throw new PLCCException("...exiting...");
     }
 %%%
 
@@ -106,7 +116,7 @@ StrngExp
             chars.add(0, c); // add to beginning of list
         }
         // chars is in reverse order -- now build a ListVal in proper order
-        ListVal lst = Val.listNull;
+        ListVal lst = ListVal.empty;
         for (Character c : chars) {
             lst = lst.add(new IntVal(c));
         }
@@ -161,7 +171,7 @@ LetExp
 LetrecExp
 %%%
     public Val eval(Env env) {
-        Env nenv = letrecDecls.addBindings(env);
+        Env nenv = letDecls.addLetrecBindings(env);
         return exp.eval(nenv);
     }
 
@@ -185,7 +195,7 @@ ListExp
 %%%
     public Val eval(Env env) {
         List<Val> valList = rands.evalRands(env);
-        ListVal listVal = Val.listNull;
+        ListVal listVal = ListVal.empty;
         int n = valList.size();
         // process the elements in reverse order
         while (n > 0)
@@ -218,16 +228,16 @@ Statics
 %%%
     // Add new bindings to the static bindings -- behaves like top-level
     // defines.
-    public void addStaticBindings(Bindings staticBindings, Env staticEnv) {
+    public void addStaticBindings(Env env) {
         Iterator<Token> varIter = varList.iterator(); // LHS identifiers
         Iterator<Exp> expIter = expList.iterator();    // RHS expressions
         while(varIter.hasNext()) {
             Token var = varIter.next();
             String id = var.toString(); // the LHS identifier
             Exp exp = expIter.next();    // the RHS expression
-            Val val = exp.eval(staticEnv);
-            Binding b = new Binding(id, new ValRef(val));
-            staticBindings.addFirst(b);
+            Val val = exp.eval(env);
+            Ref ref = new ValRef(val);
+            env.add(new Binding(id, ref));
         }
     }
 %%%
@@ -348,33 +358,10 @@ Mangle
     }
 %%%
 
-WithExp
-%%%
-    public Val eval(Env env) {
-        return new EnvExp(vExp, eExp).eval(env);
-    }
-%%%
-
 NilExp
 %%%
     public Val eval(Env env) {
         return Val.nil;
-    }
-
-%%%
-
-SendExp
-%%%
-
-    public Val eval(Env env) {
-        Val v = objExp.eval(env);
-        Val p = procExp.eval(v.env()); // in the object env
-        List<Val> valList = rands.evalRands(env); // in calling env
-        return p.apply(valList);
-    }
-
-    public String toString() {
-        return " ...SendExp... ";
     }
 
 %%%
@@ -400,7 +387,7 @@ DisplayExp
     public Val eval(Env env) {
         Val v = exp.eval(env);
         System.out.print(v);
-        return v;
+        return Val.nil;
     }
 
 %%%
@@ -410,7 +397,7 @@ Display1Exp
     public Val eval(Env env) {
         Val v = exp.eval(env);
         System.out.print(v+" ");
-        return v;
+        return Val.nil;
     }
 
 %%%
@@ -433,11 +420,19 @@ PutcExp
     }
 %%%
 
+PutsExp
+%%%
+    public Val eval(Env env) {
+        Val v = exp.eval(env);
+        System.out.print(v.puts());
+        return Val.nil;
+    }
+%%%
 ErrorExp
 %%%
     public Val eval(Env env) {
         Val val = exp.eval(env);
-        throw new RuntimeException("error: " + val);
+        throw new PLCCException(val.toString());
     }
 %%%
 
@@ -447,7 +442,7 @@ PerrorExp
         String str = strng.toString();
         int len = str.length();
         str = str.substring(1,len-1);
-        throw new RuntimeException("error: " + str);
+        throw new PLCCException(str);
     }
 %%%
 
@@ -460,7 +455,7 @@ Ext0
 %%%
 
     public ClassVal toClassVal(Env env) {
-        return new EnvClass(Program.initEnv);
+        return EnvClass.envClass; // a singleton
     }
 
 %%%
@@ -473,12 +468,24 @@ Ext1
     }
 %%%
 
+Formals:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in proc formals");
+%%%
+
 Proc
 %%%
     public Val makeClosure(Env env) {
         return new ProcVal(formals, exp, env);
     }
 
+%%%
+
+LetDecls:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in let/letrec LHS identifiers");
 %%%
 
 LetDecls
@@ -491,30 +498,21 @@ LetDecls
         return env.extendEnvRef(bindings);
     }
 
+    public Env addLetrecBindings(Env env) {
+        env = env.extendEnvRef(new Bindings());
+        Iterator<Token> varIter = varList.iterator();
+        Iterator<Exp> expIter = expList.iterator();
+        while (varIter.hasNext()) {
+            String str = varIter.next().toString();
+            Val val = expIter.next().eval(env);
+            Ref ref = new ValRef(val);
+            env.add(new Binding(str, ref));
+        }
+        return env;
+    }
+
     public String toString() {
         return " ...LetDecls... ";
-    }
-%%%
-
-LetrecDecls
-%%%
-
-    public Env addBindings(Env env) {
-        Env nenv = env.extendEnvRef(null); // no bindings yet
-        List<Val> valList = new ArrayList<Val>();
-        for (Proc p : procList)
-            valList.add(p.makeClosure(nenv));
-        List<Ref> refList = Ref.valsToRefs(valList);
-        Bindings bindings = new Bindings(varList, refList);
-        nenv.replaceBindings(bindings);
-        return nenv;
-    }
-
-    public Bindings toBindingsRef(Env env) {
-        List<Ref> refList = new ArrayList<Ref>();
-        for (Proc p : procList)
-            refList.add(new ValRef(p.makeClosure(env)));
-        return new Bindings(varList, refList);
     }
 %%%
 
@@ -532,7 +530,7 @@ Rands
     }
 
     public List<Val> evalRands(Env env) {
-        List<Val> valList = new ArrayList<Val>();
+        List<Val> valList = new ArrayList<Val>(expList.size());
         for (Exp e : expList)
             valList.add(e.eval(env));
         return valList;

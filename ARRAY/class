@@ -17,22 +17,21 @@ public abstract class ClassVal extends Val {
 %%%
 
 # a "parentless" class whose static environment is the environment
-# in which the class is created
+# passed to its constructor
 EnvClass
 %%%
 import java.util.*;
 
 public class EnvClass extends ClassVal {
 
+    // a singleton: the class extended by every other class
+    public static EnvClass envClass = new EnvClass(Program.initEnv);
+
     public Env staticEnv;
 
     public EnvClass(Env env) {
         // the static environment of this class extends the current environment
-        Bindings staticBindings = new Bindings();
-        staticEnv = env.extendEnvRef(staticBindings);
-        // create bindings for these static symbols ...
-        staticBindings.add("superclass", new ValRef(Val.nil));
-        staticBindings.add("myclass", new ValRef(this));
+        staticEnv = env;
     }
 
     public Env env() {
@@ -44,13 +43,12 @@ public class EnvClass extends ClassVal {
     public ObjectVal makeObject(Ref objRef) {
         // System.err.println("...makeObject (in EnvClass)...");
         // start with the static environment of this class
-        Env e = staticEnv;
+        Env env = staticEnv;
         // add the field binding 'self' to refer to this object
         Bindings fieldBindings = new Bindings();
-        e = e.extendEnvRef(fieldBindings);
-        ObjectVal objectVal = new ObjectVal(this, e);
+        env = env.extendEnvRef(fieldBindings);
+        ObjectVal objectVal = new ObjectVal(env);
         fieldBindings.add("self", objRef); // deep
-        fieldBindings.add("this", new ValRef(objectVal)); // shallow
         return objectVal;
     }
 
@@ -75,6 +73,7 @@ public class StdClass extends ClassVal {
     public Env staticEnv;
 
     public StdClass(
+            Env env,
             ClassVal superClass, // evaluated by ClassExp
             Statics statics,
             Fields fields,
@@ -90,11 +89,12 @@ public class StdClass extends ClassVal {
         // initially create bindings for these static symbols ...
         staticBindings.add("myclass", new ValRef(this));
         staticBindings.add("superclass", new ValRef(superClass));
+        staticBindings.add("!@", new ValRef(new ObjectVal(env)));
         // The static RHS expressions are evaluated in the modified
         // staticEnv that includes the bindings for myclass, superclass.
         // New static bindings are added as they are created,
         // as in top-level defines
-        statics.addStaticBindings(staticBindings, staticEnv);
+        statics.addStaticBindings(staticEnv);
     }
 
     public Env env() {
@@ -107,31 +107,20 @@ public class StdClass extends ClassVal {
         ObjectVal parent = superClass.makeObject(objRef);
 
         // this object's environment extends the parent object's environment
-        Env e = parent.objectEnv;
+        Env env = parent.objectEnv;
 
         // add this class's static bindings (including those for myclass, etc)
-        e = e.extendEnvRef(staticBindings);
+        env = env.extendEnvRef(staticBindings);
 
         // the fields come next
-        // two fields are pre-defined: 'super' and 'self'
-        // bind 'super' to the parent object and 'self' to this object
-        // 'self' is unnecessary here, except that it speeds up lookups
         Bindings fieldBindings = new Bindings();
-        e = e.extendEnvRef(fieldBindings);
-        // bind all of this object's instance fields to nil
-        for (Token t : fields.varList) {
-              String s = t.toString();
-              fieldBindings.add(s, new ValRef(Val.nil));
-        }
+        env = env.extendEnvRef(fieldBindings);
+        fields.addFieldBindings(fieldBindings);
 
         // bind all this object's methods as in letrec
-        // don't add any bindings if there are no method declarations
-        if (methods.varList.size() > 0) {
-            LetrecDecls methodDecls =
-                new LetrecDecls(methods.varList, methods.procList);
-            e = methodDecls.addBindings(e);
-        }
-        ObjectVal objectVal = new ObjectVal(this, e);
+        env = methods.addMethodBindings(env);
+
+        ObjectVal objectVal = new ObjectVal(env);
 
         // bind 'super' field to the parent object
         fieldBindings.add("super", new ValRef(parent)); // parent object
@@ -160,11 +149,9 @@ import java.util.*;
 
 public class ObjectVal extends Val {
 
-    public ClassVal classVal; // this object's class
     public Env objectEnv;     // this object's environment
 
-    public ObjectVal(ClassVal classVal, Env objectEnv) {
-        this.classVal = classVal;
+    public ObjectVal(Env objectEnv) {
         this.objectEnv = objectEnv;
     }
 
@@ -185,4 +172,26 @@ public class ObjectVal extends Val {
     }
 
 }
+%%%
+
+Methods
+%%%
+    public Env addMethodBindings(Env env) {
+        if (varList.size() == 0)
+            return env;
+        List<Exp> expList = new ArrayList<Exp>(procList.size());
+        for (Proc p: procList)
+            expList.add(new ProcExp(p));
+        return new LetDecls(varList, expList).addLetrecBindings(env);
+    }
+%%%
+
+Fields
+%%%
+    public void addFieldBindings(Bindings fieldBindings) {
+        for (Token t: varList) {
+            String s = t.toString();
+            fieldBindings.add(s, new ValRef(Val.nil));
+        }
+    }
 %%%

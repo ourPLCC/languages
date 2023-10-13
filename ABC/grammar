@@ -19,7 +19,7 @@ LIT '[a-z][_\w]*'
 %
 
 # grammar specification
-<program>:DFRQ ::= <head> <dfrq>
+<program>:Prog ::= <head> <dfrq>
 <program>:Print ::= PRINT
 <program>:Clear ::= CLEAR
 <dfrq>:Delete ::= DEL

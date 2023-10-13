@@ -7,22 +7,27 @@ Program
 
 Define
 %%%
-    // notice that calling toString triggers a modification
+    // notice that calling $run() triggers a modification
     // of the initial environment
-    public String toString() {
+    public void $run() {
         String id = var.toString();
         Env env = Program.env;
         Val val = exp.eval(env);
-        env.addFirst(new Binding(id, new ValRef(val)));
-        return id; // gotta return *something*
+        Ref ref = new ValRef(val);
+        Binding b = env.lookup(id);
+        if (b != null)
+            b.ref = ref;
+        else
+            env.add(new Binding(id, ref));
+        System.out.println(id);
     }
 %%%
 
 Eval
 %%%
-    public String toString() {
+    public void $run() {
         Val val = exp.eval(Program.env);
-        return val.toString();
+        System.out.println(val);
     }
 %%%
 
@@ -188,11 +193,23 @@ SeqExp
 
 %%%
 
+Formals:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in proc formals");
+%%%
+
 Proc
 %%%
     public Val makeClosure(Env env) {
         return new ProcVal(formals, exp, env);
     }
+%%%
+
+LetDecls:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in let/letrec LHS identifiers");
 %%%
 
 LetDecls
@@ -212,13 +229,15 @@ LetrecDecls
 %%%
     public Env addBindings(Env env) {
         if (varList.size() > 0) {
-            Env nenv = env.extendEnvRef(null); // no bindings yet
-            List<Val> valList = new ArrayList<Val>();
-            for (Proc p : procList)
-                valList.add(p.makeClosure(nenv));
-            Bindings bindings =
-                new Bindings(varList, Ref.valsToRefs(valList));
-            nenv.replaceBindings(bindings);
+            Env nenv = env.extendEnvRef(new Bindings()); // no bindings yet
+            Iterator<Token> varIter = varList.iterator();
+            Iterator<Proc> procIter = procList.iterator();
+            while (varIter.hasNext()) {
+                String str = varIter.next().toString();
+                Val val = procIter.next().makeClosure(nenv);
+                Ref ref = new ValRef(val);
+                nenv.add(new Binding(str,ref));
+            }
             return nenv;
         }
         return env;

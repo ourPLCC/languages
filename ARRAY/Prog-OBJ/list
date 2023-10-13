@@ -213,13 +213,13 @@ define append = proc(xs, ys)
     if xs then addFirst(first(xs), .append(rest(xs), ys)) else ys
 
 %% a list of all of the printable ASCII characters
-define ascii = proc()
+define ascii = proc(s,e) % s=start, e=end
   letrec
     loop = proc(t)
-      if <?(t, 126)
+      if <?(t, e)
         then addFirst(t, .loop(add1(t)))
         else []
     in
-      .loop(32)
+      .loop(s)
             
-{newline ; putc .ascii() ; newline}
+{newline ; putc .ascii(32,126) ; newline}

@@ -5,7 +5,7 @@ define shape =
     method init = proc() {set name="shape" ; self}
     method area = proc() 0
     method show = proc()
-      <self>{putc name ; putc ": area=" ; display .area() ; newline ; self}
+      <self>{puts name ; puts ": area=" ; display .area() ; newline }
   end
 
 define rectangle =
@@ -35,15 +35,17 @@ define c = .<new circle>init(2)      % a circle with radius 2
 define sq = .<new square>init(11)    % a square with side 11
 define sh = .<new shape>init()       % a shapeless 'shape'
 
-.<r>show()
-.<c>show()
-.<sq>show()
-.<sh>show()
+{ .<r>show()
+; .<c>show()
+; .<sq>show()
+; .<sh>show()
+}
 
 % another way to do the above without 'define's:
 
-!<new rectangle>init(4,5)>show()!>
-!<new circle>init(2)>show()!>
-!<new square>init(11)>show()!>
-!<new shape>init()>show()!>
+{ !<new rectangle>init(4,5)>show()!>
+; !<new circle>init(2)>show()!>
+; !<new square>init(11)>show()!>
+; !<new shape>init()>show()!>
+}
 

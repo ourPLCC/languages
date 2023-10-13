@@ -6,6 +6,7 @@ define flatten = proc(xs)
       r = rest(xs)
     in
       if list?(f)
-      then .append(.flatten(f), .flatten(r))
-      else addFirst(f, .flatten(r))
+      then append(.flatten(f), .flatten(r))
+      else add(f, .flatten(r))
   else xs
+

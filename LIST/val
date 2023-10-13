@@ -1,4 +1,5 @@
 Val
+
 %%%
 import java.util.*;
 
@@ -10,23 +11,11 @@ public abstract class Val {
     }
 
     public Val apply(List<Val> args, Env e) {
-        throw new RuntimeException("Cannot apply " + this.toString());
+        throw new PLCCException("Cannot apply " + this.toString());
     }
 
     public IntVal intVal() {
-        throw new RuntimeException(this + ": not an Int");
-    }
-
-    public ProcVal procVal() {
-        throw new RuntimeException(this + ": not a Proc");
-    }
-
-    public ListNode listNode() {
-        throw new RuntimeException(this + ": not a nonempty List");
-    }
-
-    public ListVal listVal() {
-        throw new RuntimeException(this + ": not a List");
+        throw new PLCCException(this + ": not an Int");
     }
 
     public boolean isTrue() {
@@ -35,9 +24,7 @@ public abstract class Val {
         return true;
     }
 
-    public boolean isList() {
-        return false; // only ListVals are true
-    }
+//Val//
 }
 %%%
 
@@ -50,11 +37,11 @@ public class IntVal extends Val {
     public int val;
     
     public IntVal(String s) {
-	val = Integer.parseInt(s);
+        val = Integer.parseInt(s);
     }
     
     public IntVal(int v) {
-	val = v;
+        val = v;
     }
 
     public IntVal intVal() {
@@ -62,20 +49,13 @@ public class IntVal extends Val {
     }
     
     public boolean isTrue() {
-	return val != 0;
+        return val != 0;
     }
     
     public String toString() {
-	return "" + val;
+        return "" + val;
     }
 
-    public static void main(String [] args) {
-	Val v = new IntVal(3);
-	Val w = new IntVal(0);
-	System.out.println("v=" + v);
-	System.out.println("w=" + w);
-    }
-    
 }
 %%%
 
@@ -90,19 +70,17 @@ public class ProcVal extends Val {
     public Env env;
 
     public ProcVal(Formals formals, Exp body, Env env) {
-	this.formals = formals;
+        this.formals = formals;
         this.body = body;
         this.env = env;
     }
 
     public Val apply(List<Val> args, Env e) {
+        if (formals.varList.size() != args.size())
+            throw new PLCCException("formals/args number mismatch");
         Bindings bindings = new Bindings(formals.varList, args);
         Env nenv = env.extendEnv(bindings);
         return body.eval(nenv);
-    }
-
-    public ProcVal procVal () {
-        return this;
     }
 
     public String toString() {
@@ -118,69 +96,3 @@ public class ProcVal extends Val {
 
 %%%
 
-ListVal
-%%%
-public abstract class ListVal extends Val {
-
-    public static final ListVal listNull = new ListNull();
-
-    public ListVal addFirst(Val val) {
-	return new ListNode(val, this);
-    }
-
-    public boolean isList() {
-        return true;
-    }
-
-    public ListVal listVal() {
-        return this;
-    }
-
-    public abstract String toString(String sep);
-
-}
-%%%
-
-ListNode
-%%%
-public class ListNode extends ListVal {
-
-    public Val val;
-    public ListVal list;
-
-    public ListNode(Val val, ListVal list) {
-        this.val = val;
-        this.list = list;
-    }
-
-    public ListNode listNode() {
-        return this;
-    }
-
-    public String toString() {
-        return "[" + this.toString("") + "]";
-    }
-
-    public String toString(String sep) {
-        return sep + val + list.toString(",");
-    }
-}
-%%%    
-
-ListNull
-%%%
-public class ListNull extends ListVal {
-
-    public boolean isTrue() {
-        return false;
-    }
-
-    public String toString() {
-        return "[]";
-    }
-
-    public String toString(String sep) {
-        return "";
-    }
-}
-%%%    

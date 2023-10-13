@@ -11,9 +11,6 @@ define a2l = proc(a)
     else
       lst
 
-define length = proc(lst)
-  if lst then +(1,.length(rest(lst))) else 0
-
 % turn a list into an array -- this one uses a recursive helper
 define l2a = proc(lst)
   letrec
@@ -23,7 +20,7 @@ define l2a = proc(lst)
       then {set \ary[loc] = first(lst) ; .insert(rest(lst), ary, add1(loc))}
       else ary
   in
-    .insert(lst, array[.length(lst)], 0)
+    .insert(lst, array[len(lst)], 0)
 
 % examples
 define m = 10

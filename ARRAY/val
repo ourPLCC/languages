@@ -15,19 +15,19 @@ public abstract class Val {
     }
 
     public Val apply(List<Val> valList) {
-        throw new RuntimeException(this + ": not a procedure");
+        throw new PLCCException(this + ": not a procedure");
     }
     
     public Env env() {
-	throw new RuntimeException("<" + this + ">: not an environment");
+        throw new PLCCException("<" + this + ">: not an environment");
     }
 
     public boolean isTrue() {
-	return true;
+        return true;
     }
 
     public boolean isList() {
-	return false;
+        return false;
     }
 
     public boolean isArray() {
@@ -35,7 +35,7 @@ public abstract class Val {
     }
 
     public boolean isObject() {
-	return false;
+        return false;
     }
 
     public boolean isClass() {
@@ -43,43 +43,39 @@ public abstract class Val {
     }
 
     public IntVal intVal() {
-        throw new RuntimeException(this + ": not an Int");
+        throw new PLCCException(this + ": not an Int");
     }
 
     public ListVal listVal() {
-        throw new RuntimeException(this + ": not a List");
+        throw new PLCCException(this + ": not a List");
     }
 
     public ListNode listNode() {
-        throw new RuntimeException(this + ": not a ListNode");
-    }
-
-    public ProcVal procVal() {
-        throw new RuntimeException(this + ": not a Proc");
+        throw new PLCCException(this + ": not a ListNode");
     }
 
     public ClassVal classVal() {
-        throw new RuntimeException(this + ": not a Class");
+        throw new PLCCException(this + ": not a Class");
     }
 
     public ObjectVal objectVal() {
-        throw new RuntimeException(this + ": not an Obj");
+        throw new PLCCException(this + ": not an Obj");
     }
 
     public ArrayVal arrayVal() {
-        throw new RuntimeException(this + ": not an Array");
+        throw new PLCCException(this + ": not an Array");
     }
 
-    public LenVal lenVal() {
-        throw new RuntimeException("cannot apply len to "+this);
+    public int len() {
+        throw new PLCCException("cannot apply len to "+this);
     }
 
     public ObjectVal makeObject(Ref objRef) {
-        throw new RuntimeException("new " + this + ": not a class");
+        throw new PLCCException("new " + this + ": not a class");
     }
 
     public String putc() {
-	return this.toString();
+        return this.toString();
     }
 }
   
@@ -115,7 +111,7 @@ public class IntVal extends Val {
     }
 
     public String putc() {
-	return "" + (char)val;
+        return "" + (char)val;
     }
     
     public String toString() {
@@ -150,10 +146,6 @@ public class ProcVal extends Val {
 
     public Env env() {
         return env;
-    }
-
-    public ProcVal procVal() {
-        return this;
     }
 
     public String toString() {
@@ -198,14 +190,12 @@ public class ArrayVal extends Val implements LenVal {
     public int size;
 
     public ArrayVal(int size) {
+        if (size < 0)
+            throw new PLCCException(size + ": array size cannot be negative");
         refArray = new ValRef[size];
         for (int i=0 ; i<size ; i++)
             refArray[i] = new ValRef(Val.nil);
         this.size = size;
-    }
-
-    public LenVal lenVal() {
-        return this;
     }
 
     public int len() {

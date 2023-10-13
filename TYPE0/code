@@ -7,25 +7,37 @@ Program
 
 Define
 %%%
-    // notice that calling toString triggers a modification
+    // notice that calling $run() triggers a modification
     // of the initial environment
-    public String toString() {
-        Val val = exp.eval(Program.env);
-        Program.env.addFirst(new Binding(var.toString(), new ValRef(val)));
-        return var.toString(); // return *something*
+    public void $run() {
+        Env env = Program.env;     // the top-level environment
+        String s = var.toString(); // the LHS of the define
+        Val val = exp.eval(env);   // the RHS value
+        Ref ref = new ValRef(val); // 
+        Binding b = env.lookup(s); // only look at the top-level 
+        if (b != null)
+            b.ref = ref;           // replace the binding
+        else
+            env.add(new Binding(s, ref));
+        System.out.println(s);
     }
 %%%
 
 Eval
 %%%
-    public String toString() {
-        return exp.eval(Program.env).toString();
+    public void $run() {
+        Val val = exp.eval(env);
+        System.out.println(val);
     }
 %%%
 
 Exp
 %%%
     public abstract Val eval(Env env);
+
+    public Ref evalRef(Env env) {
+        return new ValRef(eval(env));
+    }
 %%%
 
 PrimappExp
@@ -80,6 +92,10 @@ VarExp
         return env.applyEnv(var);
     }
 
+    public Ref evalRef(Env env) {
+        return env.applyEnvRef(var);
+    }
+
     public String toString() {
         return var.toString();
     }
@@ -101,7 +117,7 @@ LetExp
 LetrecExp
 %%%
     public Val eval(Env env) {
-        Env nenv = letrecDecls.addBindings(env); // new bindings
+        Env nenv = letDecls.addLetrecBindings(env); // new bindings
         return exp.eval(nenv);
     }
 
@@ -123,14 +139,10 @@ ProcExp
 
 AppExp
 %%%
-
     public Val eval(Env env) {
-        ProcVal p = exp.eval(env).procVal();
-        List<Val> valList = rands.evalRands(env);
-        List<Ref> refList = Ref.valsToRefs(valList);
-        Bindings bindings = new Bindings(p.formals.varList, refList);
-        Env nenv = p.env.extendEnvRef(bindings);
-        return p.body.eval(nenv);
+        Val v = exp.eval(env);
+        List<Ref> refList = rands.evalRandsRef(env);
+        return v.apply(refList);
     }
 
     public String toString() {
@@ -178,6 +190,12 @@ FalseExp
     }
 %%%
 
+Formals:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in proc formals");
+%%%
+
 Proc
 %%%
     public Val makeClosure(Env env) {
@@ -195,27 +213,35 @@ LetDecls
         return env.extendEnvRef(bindings);
     }
 
+    public Env addLetrecBindings(Env env) {
+        env = env.extendEnvRef(new Bindings());
+        Iterator<Token> varIter = varList.iterator();
+        Iterator<Exp> expIter = expList.iterator();
+        while (varIter.hasNext()) {
+            String str = varIter.next().toString();
+            Val val = expIter.next().eval(env);
+            Ref ref = new ValRef(val);
+            env.add(new Binding(str, ref));
+        }
+        return env;
+    }
+
     public String toString() {
         return " ...LetDecls... ";
     }
 %%%
 
-LetrecDecls
-%%%
-    public Env addBindings(Env env) {
-        Env nenv = env.extendEnvRef(null); // no bindings yet
-        List<Val> valList = new ArrayList<Val>();
-        for (Proc p : procList)
-            valList.add(p.makeClosure(nenv));
-        List<Ref> refList = Ref.valsToRefs(valList);
-        Bindings bindings = new Bindings(varList, refList);
-        nenv.replaceBindings(bindings);
-        return nenv;
-    }
-%%%
-
 Rands
 %%%
+    // use each expression's evalRef method to build
+    // a List<Ref> object
+    public List<Ref> evalRandsRef(Env env) {
+        List<Ref> refList = new ArrayList<Ref>(expList.size());
+        for (Exp exp : expList)
+            refList.add(exp.evalRef(env));
+        return refList;
+    }
+
     public String toString() {
         String s = "";   // the string to return
         String sep = ""; // no separator for the first expression
@@ -228,7 +254,7 @@ Rands
     }
 
     public List<Val> evalRands(Env env) {
-        List<Val> valList = new ArrayList<Val>();
+        List<Val> valList = new ArrayList<Val>(expList.size());
         for (Exp e : expList)
             valList.add(e.eval(env));
         return valList;

@@ -1,6 +1,6 @@
 ValContException
 %%%
-public class ValContException extends RuntimeException {
+public class ValContException extends PLCCException {
 
     public Val val;
 
@@ -18,7 +18,7 @@ public class ValContException extends RuntimeException {
 
 RefContException
 %%%
-public class RefContException extends RuntimeException {
+public class RefContException extends PLCCException {
 
     public Ref ref;
 
@@ -36,7 +36,7 @@ public class RefContException extends RuntimeException {
 
 NullContException
 %%%
-public class NullContException extends RuntimeException {
+public class NullContException extends PLCCException {
 
     public NullContException() {
         super("Null Continuation Exception");

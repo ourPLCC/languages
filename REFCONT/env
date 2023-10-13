@@ -5,22 +5,32 @@ import java.util.*;
 
 public abstract class Env {
 
+    public static final Env empty = new EnvNull();
+
     public static Env initEnv() {
         // an environment with an empty local environment
-        return new EnvNode(new Bindings(), new EnvNull());
+        return new EnvNode(new Bindings(), empty);
     }
 
-    public abstract Ref applyEnvRef(String sym);
-    public abstract void replaceBindings(Bindings bindings);
-    public abstract void add(Binding binding);
-    public abstract void addFirst(Binding binding);
+    public abstract Binding lookup(String sym, boolean recur);
 
-    public Val applyEnv(String sym) {
-        return applyEnvRef(sym).deRef();
+    public Binding lookup(String sym) {
+        return lookup(sym, true);
+    }
+
+    public Ref applyEnvRef(String sym) {
+        Binding b = lookup(sym);
+        if (b != null)
+            return b.ref;
+        throw new PLCCException("no binding for " + sym);
     }
 
     public Ref applyEnvRef(Token tok) {
         return applyEnvRef(tok.toString());
+    }
+
+    public Val applyEnv(String sym) {
+        return applyEnvRef(sym).deRef();
     }
 
     public Val applyEnv(Token tok) {
@@ -30,6 +40,9 @@ public abstract class Env {
     public Env extendEnvRef(Bindings bindings) {
         return new EnvNode(bindings, this);
     }
+
+    public abstract void replaceBindings(Bindings bindings);
+    public abstract void add(Binding b);
 
     public abstract String toString(int n);
 }
@@ -49,16 +62,14 @@ public class EnvNode extends Env {
         this.bindings = bindings;
         this.env = env;
     }
-    
-    // find the Ref corresponding to a given id
-    public Ref applyEnvRef(String sym) {
-        // first look in the local bindings
-        for (Binding b : bindings.bindingList) {
+
+    public Binding lookup(String sym, boolean recur) {
+        for (Binding b: bindings.bindingList)
             if (sym.equals(b.id))
-                return b.ref;
-        }
-        // if nothing left, we don't have a match in this list of bindings
-        return env.applyEnvRef(sym);
+                return b;
+        if (recur)
+            return env.lookup(sym, recur);
+        return null;
     }
 
     public void replaceBindings(Bindings bindings) {
@@ -77,10 +88,6 @@ public class EnvNode extends Env {
         bindings.add(b);
     }
 
-    public void addFirst(Binding binding) {
-        bindings.addFirst(binding);
-    }
-
 }
 %%%
 
@@ -93,22 +100,17 @@ public class EnvNull extends Env {
     // create an environment 
     public EnvNull() {
     }
-    
-    // find the Ref corresponding to a given id
-    public Ref applyEnvRef(String sym) {
-        throw new RuntimeException("no binding for "+sym);
+
+    public Binding lookup(String sym, boolean recur) {
+        return null;
     }
 
     public void replaceBindings(Bindings bindings) {
-        throw new RuntimeException("no bindings to replace");
+        throw new PLCCException("no bindings to replace");
     }
 
-    public void add(Binding binding) {
-        throw new RuntimeException("no bindings to add to");
-    }
-
-    public void addFirst(Binding binding) {
-        throw new RuntimeException("no bindings to add to");
+    public void add(Binding b) {
+        throw new PLCCException("no bindings to add to");
     }
 
     public String toString(int n) {
@@ -134,7 +136,7 @@ public class Binding {
     }
 
     public String toString() {
-        return "[" + id + "->" + ref.toString() + "]";
+        return "[" + id + "->" + ref + "]";
     }
 
 }
@@ -160,6 +162,8 @@ public class Bindings {
     // idList is a list of Tokens/Strings
     // refList is a list of Refs
     public Bindings(List<?> idList, List<Ref> refList) {
+        if (idList.size() != refList.size())
+            throw new PLCCException("List sizes mismatch");
         bindingList = new ArrayList<Binding>();
         Iterator<?> idIterator = idList.iterator();
         Iterator<Ref> refIterator = refList.iterator();
@@ -171,27 +175,7 @@ public class Bindings {
     }
 
     public void add(String s, Ref r) {
-        if (s.charAt(0) == '_')
-            return;
         bindingList.add(new Binding(s, r));
-    }
-
-    public void addFirst(Binding binding) {
-        // bindingList.add(0,binding);
-        // Check to see if there's already a binding for the
-        // variable -- if so, just replace the reference, otherwise
-        // add it to the bindingList
-        String id = binding.id;
-        if (id.charAt(0) == '_')
-            return;
-        Ref ref = binding.ref;
-        for (Binding b : bindingList) {
-            if (id.equals(b.id)) {
-                b.ref = ref;
-                return;
-            }
-        }
-        bindingList.add(binding);
     }
 
     public void add(Binding b) {

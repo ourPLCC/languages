@@ -9,16 +9,23 @@ Program
 
 Define
 %%%
-    public String toString() {
-        return var.toString();
+    public void $run() {
+        String id = var.toString();
+        Env env = Program.env;
+        Val val = exp.eval(env);
+        Binding b = env.lookup(id);
+        if (b != null)
+            b.ref.setRef(val);
+        else
+            env.add(new Binding(id, new ValRef(val)));
+        System.out.println(id);
     }
 %%%
 
 Eval
 %%%
-    public String toString() {
-        return exp.toString() + ";";
-        // return exp.eval(Program.env).toString();
+    public void $run() {
+        System.out.println(exp.eval(Program.env).toString());
     }
 %%%
 
@@ -28,135 +35,142 @@ Exp
         Val val = term.eval(env);
         return terms.eval(val, env);
     }
-
-    public String toString() {
-        return term.toString()+terms.toString();
-    }
-        
 %%%
 
 Terms
 %%%
     public Val eval(Val val, Env env) {
-        return val; // stub
-    }
-
-    public String toString() {
-        String s = "";
         Iterator<Prim0> prim0Iterator = prim0List.iterator();
         Iterator<Term> termIterator = termList.iterator();
         while (prim0Iterator.hasNext()) {
-            String prim = prim0Iterator.next().toString();
-            String term = termIterator.next().toString();
-            s += prim + term;
+            Prim0 prim0 = prim0Iterator.next();
+            Term term = termIterator.next();
+            val = prim0.apply(val, term.eval(env));
         }
-        return s;
+        return val;
     }
+
 %%%
 
 Term
 %%%
     public Val eval(Env env) {
-        return new IntVal(0);
-    }
-   
-    public String toString() {
-        return factor.toString() + factors.toString();
+        //FIXME -- follow the 'eval' code pattern for Exp, by
+        // replacing 'term' with 'factor'
+        // and 'terms' with 'factors'
+        return Val.zero; // placeholder
     }
 %%%
 
 Factors
 %%%
-    public String toString() {
-        String s = "";
-        Iterator<Prim1> prim1Iterator = prim1List.iterator();
-        Iterator<Factor> factorIterator = factorList.iterator();
-        while (prim1Iterator.hasNext()) {
-            String prim = prim1Iterator.next().toString();
-            String factor = factorIterator.next().toString();
-            s += prim + factor;
-        }
-        return s;
+    public Val eval(Val val, Env env) {
+        //FIXME -- follow the 'eval' code pattern for Terms, by
+        // replacing 'term' with 'factor'
+        // and 'prim0' with 'prim1', etc.
+        return Val.zero; // placeholder
     }
 %%%
 
 Factor
 %%%
-    // public abstract Val eval(Env env);
-%%%
-
-LitFactor
-%%%
-    public String toString() {
-        return lit.toString();
-    }
-%%%
-
-VarFactor
-%%%
-    public String toString() {
-        return var.toString();
-    }
-%%%
-
-ParenFactor
-%%%
-    public String toString() {
-        return "(" + exp + ")";
-    }
+    public abstract Val eval(Env env);
 %%%
 
 Prim2Factor
 %%%
-    public String toString() {
-        return prim2.toString() + factor.toString();
+    public Val eval(Env env) {
+        //FIXME -- apply prim2 to the value of the factor
+        return Val.zero; // placeholder
     }
 %%%
 
-PrimappFactor
+AtomFactor
+%%%
+    public Val eval(Env env) {
+        Val v = atom.eval(env);
+        return fncalls.eval(v, env); // make any function calls
+    }
 %%%
 
-    public String toString() {
-        return prim.toString()+ "(" + rands + ")";
-    }
+Atom
+%%%
+    public abstract Val eval(Env env);
+%%%
 
-    /*
+PrimappAtom
+%%%
     public Val eval(Env env) {
         // evaluate the terms in the expression list
-        // and apply the prim to the array of integer results
+        // and apply the prim to the array of results
         List<Val> args = rands.evalRands(env);
         Val [] va = Val.toArray(args);
         return prim.apply(va);
     }
-    */
-
 %%%
 
-IfFactor
-%%%
-    /*
-    public Val eval(Env env) {
-        Val testVal = testExp.eval(env);
-        if (testVal.isTrue())
-            return trueExp.eval(env);
-        else
-            return falseExp.eval(env);
-    }
-    */
-
-    public String toString() {
-        return "if "+testExp+" then "+trueExp+" else "+falseExp+" endif";
-    }
-%%%
-
-BlockFactor
+LitAtom
 %%%
     public Val eval(Env env) {
-        return null; // *FIXME*
+        return new IntVal(Integer.parseInt(lit.toString()));
     }
+%%%
 
-    public String toString() {
-        return block.toString();
+BlockAtom
+%%%
+    public Val eval(Env env) {
+        return block.eval(env);
+    }
+%%%
+
+VarAtom
+%%%
+    public Val eval(Env env) {
+        //FIXME -- get the reference bound to the variable
+        Ref ref = new ValRef(Val.zero); // placeholder
+        return assign.set(ref, env);
+    }
+%%%
+
+ParenAtom
+%%%
+    public Val eval(Env env) {
+        return exp.eval(env);
+    }
+%%%
+
+ProcAtom
+%%%
+    public Val eval(Env env) {
+        //FIXME-- return an appropriately constructed ProcVal
+        return null; // placeholder
+    }
+%%%
+
+IfAtom
+%%%
+    public Val eval(Env env) {
+        //FIXME -- duplicate the code for IfExp in Language SET
+        return Val.zero; // placeholder
+    }
+%%%
+
+Assign
+%%%
+    public abstract Val set(Ref ref, Env env);
+%%%
+
+Assign0
+%%%
+    public Val set(Ref ref, Env env) {
+        return ref.deRef();
+    }
+%%%
+
+Assign1
+%%%
+    public Val set(Ref ref, Env env) {
+        return ref.setRef(atom.eval(env));
     }
 %%%
 
@@ -164,85 +178,50 @@ Block
 %%%
     public Val eval(Env env) {
         env = blockDecls.addBindings(env);
-        return exp.eval(env);
-    }
-
-    public String toString() {
-        String declsString = blockDecls.toString();
-        String expString = exp.toString();
-        return "{" + declsString + expString + "}";
-    } 
-        
-%%%
-
-ProcFactor
-%%%
-    /*
-    public Val eval(Env env) {
-       
-    }
-    */
-
-    public String toString() {
-        return "proc";
+        Val val = exp.eval(env);
+        for (Exp e: exps.expList)
+            val = e.eval(env);
+        return val;
     }
 %%%
 
-AppFactor
+Fncalls
 %%%
-    /*
-    public Val eval(Env env) {
-
+    public Val eval(Val v, Env env) {
+        Iterator<Rands> randsIter = randsList.iterator();
+        while (randsIter.hasNext()) {
+            Rands rands = randsIter.next();
+            //FIXME -- evaluate the rands to get a list of args
+            List<Val> args = null;
+            v = v.apply(args);
+        }
+        return v;
     }
-    */
+%%%
 
-    public String toString() {
-        return "app";
-    }
+Formals:init
+%%%
+    Env.checkDuplicates(varList, " in proc definition");
+%%%
+
+BlockDecls:init
+%%%
+    Env.checkDuplicates(varList, " in block declarations");
 %%%
 
 BlockDecls
 %%%
-    // add bindings as in top-level defines
+    // add bindings as in LetDecls/addLetrecBindings in Language SET
     public Env addBindings(Env env) {
-	if (varList.size() == 0)
+        if (varList.size() == 0)
             return env; // no need to build a new environment
-        Iterator<Token> varIterator = varList.iterator();
-        Iterator<Exp> expIterator = expList.iterator();
-        Bindings bindings = new Bindings();
-        env = env.extendEnv(bindings);
-        while (varIterator.hasNext()) {
-            String id = varIterator.next().toString();
-            Exp exp = expIterator.next();
-            Val val = exp.eval(env);
-            env.add(new Binding(id, val));
-        }
-        return env;
-    }
-
-    public String toString() {
-        String s="";
-        Iterator<Token> varIterator = varList.iterator();
-        Iterator<Exp> expIterator = expList.iterator();
-        while (varIterator.hasNext())
-            s += "def "+varIterator.next()+"="+expIterator.next()+"; ";
-        return s;
+        //FIXME -- extend env and add the bindings to it
+        return env; // placeholder
     }
 %%%
 
 Rands
 %%%
-    public String toString() {
-        String s = "";   // the string to return
-        String sep = ""; // no separator for the first expression
-        // get all of the expressions in the expression list
-        for (Exp e : expList) {
-            s += sep + e;
-            sep = ",";   // commas separate the rest of the expressions
-        }
-        return s;
-    }
-
     // evaluate the individual terms in expList using the given environment
     // and return a List<Val> object
     public List<Val> evalRands(Env env) {
@@ -252,4 +231,3 @@ Rands
         return args;
     }
 %%%
-

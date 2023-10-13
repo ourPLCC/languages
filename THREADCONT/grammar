@@ -1,5 +1,6 @@
 # Language REFCONT
 #   Language REF with continuations and concurrent evaluation of Rands
+#   Only supports proc RHS in letrec
 
 # Lexical specification
 skip WHITESPACE '\s+'

@@ -1,5 +1,5 @@
 # Language INFIX
-#   Language V4 with infix arithmetic expressions
+#   Language SET with infix expressions
 
 # Lexical specification
 skip WHITESPACE '\s+'
@@ -15,6 +15,7 @@ DIVOP '/'
 ADD1OP 'add1'
 SUB1OP 'sub1'
 ZEROP 'zero\?'
+POSP 'pos\?'
 IF 'if'
 THEN 'then'
 ELSE 'else'
@@ -23,11 +24,9 @@ DEF 'def'
 DEFINE 'define'
 EQUALS '='
 PROC 'proc'
-DOT '\.'
 SEMI ';'
 LBRACE '\{'
 RBRACE '\}'
-HASH '#'
 VAR '[A-Za-z][\w?]*'
 %
 # Grammar
@@ -37,29 +36,35 @@ VAR '[A-Za-z][\w?]*'
 <terms>                **= <prim0> <term>
 <term>                 ::= <factor> <factors>
 <factors>              **= <prim1> <factor>
-<factor>:LitFactor     ::= <LIT>
-<factor>:VarFactor     ::= <VAR>
-<factor>:ParenFactor   ::= LPAREN <exp> RPAREN
 <factor>:Prim2Factor   ::= <prim2> <factor>
-<factor>:IfFactor      ::= IF <exp>testExp THEN <exp>trueExp ELSE <exp>falseExp ENDIF
-<factor>:AppFactor     ::= DOT <exp> LPAREN <rands> RPAREN
-<factor>:PrimappFactor ::= <prim> LPAREN <rands> RPAREN
-<factor>:BlockFactor   ::= <block>
-<factor>:ProcFactor    ::= PROC LPAREN <formals> RPAREN <block>
+<factor>:AtomFactor    ::= <atom> <fncalls>
+<atom>:LitAtom         ::= <LIT>
+<atom>:BlockAtom       ::= <block>
+<atom>:ParenAtom       ::= LPAREN <exp> RPAREN
+<atom>:IfAtom          ::= IF <exp>testExp THEN <exp>trueExp ELSE <exp>falseExp ENDIF
+<atom>:PrimappAtom     ::= <prim> LPAREN <rands> RPAREN
+<atom>:VarAtom         ::= <VAR> <assign>
+<atom>:ProcAtom        ::= PROC LPAREN <formals> RPAREN <block>
+<assign>:Assign0       ::= 
+<assign>:Assign1       ::= EQUALS <atom>
+<fncalls>              **= LPAREN <rands> RPAREN
 <formals>              **= <VAR> +COMMA
-<block>                ::= LBRACE <blockDecls> <exp> RBRACE
+<block>                ::= LBRACE <blockDecls> <exp> <exps> RBRACE
+<exps>                 **= SEMI <exp>
 <blockDecls>           **= DEF <VAR> EQUALS <exp> SEMI
 <rands>                **= <exp> +COMMA
 <prim0>:AddPrim0       ::= ADDOP
 <prim0>:SubPrim0       ::= SUBOP
 <prim1>:MulPrim1       ::= MULOP
 <prim1>:DivPrim1       ::= DIVOP
-<prim2>:NegPrim2       ::= SUBOP
+<prim2>:NegPrim2       ::= SUBOP   # unary minus
 <prim>:Add1Prim        ::= ADD1OP
 <prim>:Sub1Prim        ::= SUB1OP
 <prim>:ZeropPrim       ::= ZEROP
+<prim>:PospPrim        ::= POSP
 %
 include code
+include envRef
 include prim
-include env
+include ref
 include val

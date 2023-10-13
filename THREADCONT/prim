@@ -13,7 +13,7 @@ AddPrim
 
     public Val apply(Val [] va) {
         if (va.length != 2)
-            throw new RuntimeException("two arguments expected");
+            throw new PLCCException("two arguments expected");
         int i0 = va[0].intVal().val;
         int i1 = va[1].intVal().val;
         return new IntVal(i0 + i1);
@@ -29,7 +29,7 @@ SubPrim
 
     public Val apply(Val [] va) {
         if (va.length != 2)
-            throw new RuntimeException("two arguments expected");
+            throw new PLCCException("two arguments expected");
         int i0 = va[0].intVal().val;
         int i1 = va[1].intVal().val;
         return new IntVal(i0 - i1);
@@ -45,7 +45,7 @@ MulPrim
 
     public Val apply(Val [] va) {
         if (va.length != 2)
-            throw new RuntimeException("two arguments expected");
+            throw new PLCCException("two arguments expected");
         int i0 = va[0].intVal().val;
         int i1 = va[1].intVal().val;
         return new IntVal(i0 * i1);
@@ -62,11 +62,11 @@ DivPrim
 
     public Val apply(Val [] va) {
         if (va.length != 2)
-            throw new RuntimeException("two arguments expected");
+            throw new PLCCException("two arguments expected");
         int i0 = va[0].intVal().val;
         int i1 = va[1].intVal().val;
         if (i1 == 0)
-            throw new RuntimeException("attempt to divide by zero");
+            throw new PLCCException("attempt to divide by zero");
         return new IntVal(i0 / i1);
     }
 
@@ -81,7 +81,7 @@ Add1Prim
 
     public Val apply(Val [] va) {
         if (va.length != 1)
-            throw new RuntimeException("one argument expected");
+            throw new PLCCException("one argument expected");
         int i0 = va[0].intVal().val;
         return new IntVal(i0 + 1);
     }
@@ -97,7 +97,7 @@ Sub1Prim
 
     public Val apply(Val [] va) {
         if (va.length != 1)
-            throw new RuntimeException("one argument expected");
+            throw new PLCCException("one argument expected");
         int i0 = va[0].intVal().val;
         return new IntVal(i0 - 1);
     }
@@ -113,7 +113,7 @@ ZeropPrim
 
     public Val apply(Val [] va) {
         if (va.length != 1)
-            throw new RuntimeException("one argument expected");
+            throw new PLCCException("one argument expected");
         int i0 = va[0].intVal().val;
         return new IntVal(i0 == 0 ? 1 : 0);
     }

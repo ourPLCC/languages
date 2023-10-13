@@ -7,7 +7,7 @@ define pos? =
       else 0
     else 0
 
-define neg? = proc(t) if t then .pos?(-(0,t)) else 0
+define neg? = proc(t) if t then if .pos?(t) then 0 else 1 else 0
                   
 define lt? =
   proc(x,y)

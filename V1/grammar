@@ -34,5 +34,5 @@ VAR '[A-Za-z]\w*'
 %
 include code
 include prim
-include env
+include envRN
 include val

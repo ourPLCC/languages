@@ -1,6 +1,6 @@
 ContException
 %%%
-public class ContException extends RuntimeException {
+public class ContException extends PLCCException {
 
     public Val val;
 
@@ -28,7 +28,7 @@ public class Cont {
     }
 
     public Cont apply(Ref ref) {
-        throw new RuntimeException("cannot apply this continuation to a Ref");
+        throw new PLCCException("cannot apply this continuation to a Ref");
     }
 
     public Cont apply() {
@@ -142,6 +142,63 @@ public class SetCont extends Cont {
         ref.setRef(val);
         return cont.apply(val);
     }
+}
+%%%
+
+LetrecBuildCont
+%%%
+import java.util.*;
+
+// builds a letrec continuation with an environment in which
+//   an expression will be evaluated, with bindings
+//   to VARs to their associated Values
+// used with LetrecExps
+public class LetrecBuildCont extends Cont {
+
+    public Iterator<Token> varIter; // VAR tokens
+    public Iterator<Exp> expIter;   // actual parameter expressions
+    public Env paramEnv;            // actual parameter evaluation environment
+    public Env paramxEnv;           // actual parameter exception environment
+    public Exp bodyExp;             // body expression
+    public Env bodyEnv;             // body evaluation environment
+    public Env bodyxEnv;            // body execption environment
+    public Cont cont;               // continuation
+
+    public LetrecBuildCont(List<Token> varList,
+                     List<Exp> expList,
+                     Env paramEnv,
+                     Env paramxEnv,
+                     Exp bodyExp,
+                     Env bodyEnv,
+                     Env bodyxEnv,
+                     Cont cont) {
+        varIter = varList.iterator();
+        expIter = expList.iterator();
+        this.paramEnv = paramEnv;
+        this.paramxEnv = paramxEnv;
+        this.bodyExp = bodyExp;
+        this.bodyEnv = bodyEnv.extendEnvRef(new Bindings());
+        this.bodyxEnv = bodyxEnv;
+        this.cont = cont;
+    }
+
+    public Cont apply() {
+        // bind the identifier to the value
+        String id = varIter.next().toString();
+        bodyEnv.add(new Binding(id, new ValRef(val)));
+        return next();
+    }
+        
+    public Cont next() {
+        if (expIter.hasNext()) {
+            Exp exp = expIter.next(); // an actual parameter expression
+            return new EvalCont(exp, paramEnv, paramxEnv, this);
+        }
+        // no more arguments -- just extend the body environment
+        // with the new bindings and evaluate the body
+        return new EvalCont(bodyExp, bodyEnv, bodyxEnv, cont);
+    }
+
 }
 %%%
 
@@ -281,7 +338,7 @@ public class PrimappCont extends Cont {
         expIter = expList.iterator();
         this.env = env;
         this.xenv = xenv;
-        valList = new ArrayList<Val>();
+        valList = new ArrayList<Val>(expList.size());
         this.cont = cont;
     }
 

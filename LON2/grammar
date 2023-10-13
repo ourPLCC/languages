@@ -1,4 +1,4 @@
-# Language LON (list of numbers)
+# Language LON2 (list of numbers)
 #   The Rep loop prints the integers in the list
 
 # Lexical specification
@@ -14,13 +14,11 @@ RPAREN '\)'
 
 Lon
 %%%
-
-    public String toString() {
-        String ret = "( ";
+    public void $run() {
+        System.out.print("( ");
         for (Token tok: nums.numList) {
-            ret += tok + " ";
+            System.out.print(tok.toString() + " ");
         }
-        return ret + ")";
+        System.out.println(")");
     }
-
 %%%

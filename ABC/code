@@ -69,7 +69,7 @@ Program
     }
 %%%
 
-DFRQ
+Prog
 %%%
 
     public void eval() {

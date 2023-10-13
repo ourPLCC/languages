@@ -7,22 +7,27 @@ Program
 
 Define
 %%%
-    // notice that calling toString triggers a modification
+    // notice that calling $run() triggers a modification
     // of the initial environment
-    public String toString() {
-        String id = var.toString();
-        Env env = Program.env;
-        Val val = exp.eval(env);
-        env.addFirst(new Binding(id, new ValRef(val)));
-        return id; // gotta return *something*
+    public void $run() {
+        Env env = Program.env;     // the top-level environment
+        String s = var.str;        // the LHS of the define
+        Val val = exp.eval(env);   // the RHS value
+        Ref ref = new ValRef(val);
+        Binding b = env.lookup(s); // only look at local bindings
+        if (b != null)
+            b.ref = ref;           // replace the binding
+        else
+            env.add(new Binding(s, ref));
+        System.out.println(s);
     }
 %%%
 
 Eval
 %%%
-    public String toString() {
-        Val val = exp.eval(Program.env);
-        return val.toString();
+    public void $run() {
+        Val val = exp.eval(env);
+        System.out.println(val);
     }
 %%%
 
@@ -208,11 +213,23 @@ AtomicExp
     }
 %%%
 
+Formals:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in proc formals");
+%%%
+
 Proc
 %%%
     public Val makeClosure(Env env) {
         return new ProcVal(formals, exp, env);
     }
+%%%
+
+LetDecls:init
+%%%
+        // check for duplicates during parsing
+        Env.checkDuplicates(varList, " in let/letrec LHS identifiers");
 %%%
 
 LetDecls
@@ -238,7 +255,7 @@ LetrecDecls
     public Env addBindings(Env env) {
         if (varList.size() > 0) {
             Env nenv = env.extendEnvRef(null); // no bindings yet
-            List<Val> valList = new ArrayList<Val>();
+            List<Val> valList = new ArrayList<Val>(procList.size());
             for (Proc p : procList)
                 valList.add(p.makeClosure(nenv));
             Bindings bindings =

@@ -34,7 +34,7 @@ in
     o1 = .<new c>init(10)
     o2 = .<new c>init(20)
   in
-    {display .while(o1) ; display .while(o2)}
+    [.while(o1), .while(o2)]
 
 %% use class-defined props (again, but without giving names to classes or objects)
 .while(

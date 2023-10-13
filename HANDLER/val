@@ -14,11 +14,11 @@ public abstract class Val {
                       Env paramxEnv,
                       Env bodyxEnv,
                       Cont cont) {
-        throw new RuntimeException("Cannot apply " + this.toString());
+        throw new PLCCException("Cannot apply " + this.toString());
     }
 
     public Cont apply(List<Val> args, Env e, Env xenv) {
-        throw new RuntimeException("Cannot apply " + this.toString());
+        throw new PLCCException("Cannot apply " + this.toString());
     }
 
     // everything defaults to true except for an IntVal of zero
@@ -27,11 +27,11 @@ public abstract class Val {
     }
 
     public IntVal intVal() {
-        throw new RuntimeException(this + ": not an int");
+        throw new PLCCException(this + ": not an int");
     }
 
     public HandlerVal handlerVal() {
-        throw new RuntimeException(this + ": not a handler");
+        throw new PLCCException(this + ": not a handler");
     }
 }
 %%%
