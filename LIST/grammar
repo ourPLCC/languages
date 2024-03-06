@@ -75,9 +75,9 @@ VAR '[A-Za-z][\w?]*'
 <prim>:LenPrim     ::= LENOP
 <prim>:ListpPrim   ::= LISTP
 %
-include code
-include prim
-include envVal
-include val
-include listVal
-include listPrim
+#include code
+#include prim
+#include envVal
+#include val
+#include listVal
+#include listPrim

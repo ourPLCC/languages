@@ -63,8 +63,8 @@ VAR '[A-Za-z][\w?]*'
 <prim>:ZeropPrim       ::= ZEROP
 <prim>:PospPrim        ::= POSP
 %
-include code
-include envRef
-include prim
-include ref
-include val
+#include code
+#include envRef
+#include prim
+#include ref
+#include val
