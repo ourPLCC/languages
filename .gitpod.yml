@@ -1,7 +1,10 @@
 image: gitpod/workspace-full:latest
 tasks:
-  - name: Install PLCC
+  - name: Install PLCC and bats
     command: |
         /bin/bash -c "$(\curl -fsSL https://github.com/ourPLCC/plcc/raw/main/installers/plcc/install.bash)" \
           >> ~/.bashrc
+        echo "INSTALLING bats (for testing: https://bats-core.readthedocs.io/en/latest/index.html)"
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install bats
         exec bash
