@@ -1,6 +1,7 @@
 #!/usr/bin/env bats
 
 setup() {
+  cd "$(git rev-parse --show-toplevel)"
   cd ARRAY
   plccmk -c grammar > /dev/null
 }
