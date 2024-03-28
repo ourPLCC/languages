@@ -1,8 +1,7 @@
 #!/usr/bin/env bats
 
 setup() {
-  cd "$(git rev-parse --show-toplevel)"
-  cd OBJ
+  cd "$(find / -type d -path '*/languages/OBJ' -print -quit 2>/dev/null)"
   plccmk -c grammar > /dev/null
 }
 

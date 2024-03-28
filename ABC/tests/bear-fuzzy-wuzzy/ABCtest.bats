@@ -1,8 +1,7 @@
 #!/usr/bin/env bats
 
 setup() {
-  cd "$(git rev-parse --show-toplevel)"
-  cd ABC
+  cd "$(find / -type d -path '*/languages/ABC' -print -quit 2>/dev/null)"
   plcc grammar
   javac -cp abcdatalog.jar Java/*.java
 }

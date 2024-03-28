@@ -1,8 +1,7 @@
 #!/usr/bin/env bats
 
 setup() {
-  cd "$(git rev-parse --show-toplevel)"
-  cd HANDLER
+  cd "$(find / -type d -path '*/languages/HANDLER' -print -quit 2>/dev/null)"
   plccmk -c grammar > /dev/null
 }
 
