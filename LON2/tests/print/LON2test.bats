@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  cd "$(find / -type d -path '*/languages/LON2' -print -quit 2>/dev/null)"
+  LANGUAGE_ROOT="${BATS_TEST_DIRNAME}/../.."
+  cd "${LANGUAGE_ROOT}"
   plccmk -c grammar > /dev/null
 }
 
@@ -11,7 +12,7 @@ teardown() {
 }
 
 @test "LON2 print" {
-  
+
   RESULT="$(rep -n < ./tests/print/LON2.input)"
 
   expected_output=$(< "./tests/print/LON2.expected")

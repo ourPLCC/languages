@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  cd "$(find / -type d -path '*/languages/THREADCONT' -print -quit 2>/dev/null)"
+  LANGUAGE_ROOT="${BATS_TEST_DIRNAME}/../.."
+  cd "${LANGUAGE_ROOT}"
   plccmk -c grammar > /dev/null
 }
 
@@ -11,7 +12,7 @@ teardown() {
 }
 
 @test "THREADCONT concurrent" {
-  
+
   RESULT="$(rep -n < ./tests/concurrent/THREADCONT.input)"
 
   expected_output=$(< "./tests/concurrent/THREADCONT.expected")
