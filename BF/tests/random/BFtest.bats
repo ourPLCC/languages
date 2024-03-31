@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  cd "$(find / -type d -path '*/languages/BF' -print -quit 2>/dev/null)"
+  LANGUAGE_ROOT="${BATS_TEST_DIRNAME}/../.."
+  cd "${LANGUAGE_ROOT}"
   plccmk -c grammar > /dev/null
 }
 
@@ -16,5 +17,5 @@ teardown() {
 
   expected_output=$(< "./tests/random/BF.expected")
   [[ "$RESULT" == "$expected_output" ]]
-  
+
 }

@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  cd "$(find / -type d -path '*/languages/V2' -print -quit 2>/dev/null)"
+  LANGUAGE_ROOT="${BATS_TEST_DIRNAME}/../.."
+  cd "${LANGUAGE_ROOT}"
   plccmk -c grammar > /dev/null
 }
 
@@ -16,6 +17,6 @@ teardown() {
 
   expected_output=$(< "./tests/nested-ifs/V2.expected")
   [[ "$RESULT" == "$expected_output" ]]
-  
+
 }
 
