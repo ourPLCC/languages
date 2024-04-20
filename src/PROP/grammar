@@ -159,12 +159,12 @@ VAR '[A-Za-z\&\?\$][\w\?\&\$]*'
 <prim>:ReversePrim   ::= REVERSEOP
 <prim>:AppendPrim    ::= APPENDOP
 %
-#include code
-#include prim
-#include envRef
-#include val
-#include listVal
-#include listPrim
-#include class
-#include ref
-#include propRef
+%include code
+%include prim
+%include envRef
+%include val
+%include listVal
+%include listPrim
+%include class
+%include ref
+%include propRef

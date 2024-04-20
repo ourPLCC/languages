@@ -103,7 +103,7 @@ VAR '[A-Za-z\&\?\$][\w\?\&\$]*'
 # send obj msg(rands) is the same as .<obj>msg(rands)
 <exp>:SendExp    ::= SEND <exp>objExp <exp>procExp LPAREN <rands> RPAREN
 # with obj eval exp is the same as <obj>exp
-<exp>:WithExp    ::= WITH <exp>vExp EVAL <exp>eExp 
+<exp>:WithExp    ::= WITH <exp>vExp EVAL <exp>eExp
 <exp>:AtExp      ::= AT
 <exp>:AtAtExp    ::= ATAT
 <exp>:DisplayExp ::= DISPLAY <exp>
@@ -153,11 +153,11 @@ VAR '[A-Za-z\&\?\$][\w\?\&\$]*'
 <prim>:AddLstPrim   ::= ADDLSTOP
 <prim>:LenPrim      ::= LENOP
 %
-#include code
-#include prim
-#include envRef
-#include val
-#include list
-#include class
-#include ref
-#include len
+%include code
+%include prim
+%include envRef
+%include val
+%include list
+%include class
+%include ref
+%include len
