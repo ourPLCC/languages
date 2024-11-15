@@ -68,7 +68,7 @@ Define
             env.add(new Binding(sym, new ValRef(rhsExpVal)));
             System.out.println(sym + ":" + rhsExpType);
             return;
-        } 
+        }
         // the variable has a value, too -- can't redefine it!
         throw new PLCCException(sym + ": duplicate variable definition");
     }
@@ -223,7 +223,7 @@ ProcExp
 
     public Type evalType(TypeEnv tenv) {
         return proc.evalType(tenv);
-    }     
+    }
 
     public String toString() {
         return " ...ProcExp... ";
@@ -432,12 +432,22 @@ LetDecls
         Iterator<Exp> expIter = expList.iterator();
         while (varIter.hasNext()) {
             String str = varIter.next().toString();
-            Type typ = expIter.next().evalType(tenv);
+            Exp e = expIter.next();
+            Type typ = null;
+            if (e instanceof ProcExp) {
+                typ = ((ProcExp) e).proc.definedType();
+            } else {
+                typ = e.evalType(tenv);
+            }
             tenv.add(new TypeBinding(str, typ));
+        }
+        expIter = expList.iterator();
+        while (varIter.hasNext()) {
+            Type typ = expIter.next().evalType(tenv);
         }
         return tenv;
     }
-        
+
     public String toString() {
         return " ...LetDecls... ";
     }
@@ -508,7 +518,7 @@ TypeExps
         return paramTypeList;
     }
 %%%
-        
+
 PrimType
 %%%
     public abstract Type toType();
